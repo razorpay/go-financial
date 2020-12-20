@@ -26,6 +26,6 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v2
       - name: Checkout code
-      - uses: actions/checkout@v2
+        uses: actions/checkout@v2
       - name: Unit test
         uses: go test -v ./...
