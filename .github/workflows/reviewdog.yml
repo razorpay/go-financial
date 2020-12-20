@@ -1,0 +1,44 @@
+name: reviewdog
+
+on:
+  pull_request:
+    branches:
+      - master
+jobs:
+  reviewdog:
+    name: Run reviewdog
+    runs-on: [self-hosted]
+    env:
+      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+      HOME: "/home/runner"
+      GOCACHE: "/home/runner/.cache/go-build"
+      GOENV: "/home/runner/.config/go/env"
+      GOMODCACHE: "/home/runner/go/pkg/mod"
+      GOOS: "linux"
+      GOPATH: "/home/runner/go"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ~1.15
+
+      - name: Download Go modules
+        run: set -eux && echo 'exec echo ${GIT_TOKEN}' > /tmp/askpass.sh && chmod +x /tmp/askpass.sh && export GIT_ASKPASS=/tmp/askpass.sh &&  go mod download
+
+      - name: Install golangci-lint
+        run: wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh
+
+      - name: Move golangci-lint
+        run: sudo cp ./bin/golangci-lint /usr/bin/
+
+      - name: Run reviewdog action setup
+        uses: reviewdog/action-setup@v1
+
+      - name: Run reviewdog
+        env:
+          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          reviewdog -diff='git diff master' -conf=.reviewdog.yml -reporter=github-pr-review -runners=golangci -fail-on-error -level=info
