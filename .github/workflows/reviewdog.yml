@@ -7,7 +7,7 @@ on:
 jobs:
   reviewdog:
     name: Run reviewdog
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     env:
       GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
       HOME: "/home/runner"
