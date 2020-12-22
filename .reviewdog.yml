@@ -1,0 +1,15 @@
+# reviewdog.yml
+
+runner:
+  golint:
+    cmd: golint $(go list ./... | grep -v /vendor/)
+    errorformat:
+      - golint
+    level: info
+  golangci:
+    cmd: golangci-lint --out-format line-number -D gosimple -E gofumpt,goimports,gosec run
+    errorformat:
+      - '%E%f:%l:%c: %m'
+      - '%E%f:%l: %m'
+      - '%C%.%#'
+    level: info
