@@ -6,7 +6,7 @@ The functions in this package are a scalar version of their vectorised counterpa
 the numpy-financial(https://github.com/numpy/numpy-financial) library.
 
 Currently, only some functions are ported, the remaining will be ported soon.
- */
+*/
 package gofinancial
 
 import (

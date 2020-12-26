@@ -2,16 +2,17 @@ package gofinancial_test
 
 import (
 	"fmt"
+	"math"
+
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
-	"math"
 )
 
 // If you have a loan of 1,00,000 to be paid after 2 years, with 18% p.a. compounded annually, how much total payment will you have to do each month?
 // This example generates the total monthly payment(principal plus interest) needed for a loan of 1,00,000 over 2 years with 18% rate of interest compounded monthly
 func ExamplePmt_loan() {
-	rate := 0.18/12
-	nper := int64(12*2)
+	rate := 0.18 / 12
+	nper := int64(12 * 2)
 	pv := float64(100000)
 	fv := float64(0)
 	when := paymentperiod.ENDING
@@ -20,7 +21,6 @@ func ExamplePmt_loan() {
 	// Output:
 	// payment:-4992
 }
-
 
 // If an investment gives 6% rate of return compounded annually, how much amount should you invest each month to get 10,00,000 amount after 10 years?
 func ExamplePmt_investment() {
@@ -35,7 +35,6 @@ func ExamplePmt_investment() {
 	// payment each year:-71574
 }
 
-
 // If an investment has a 6% p.a. rate of return, compounded annually, and you are investing ₹ 10,000 at the end of each year with initial investment of ₹ 10,000, how
 // much amount will you get at the end of 10 years ?
 func ExampleFv() {
@@ -45,11 +44,10 @@ func ExampleFv() {
 	pv := float64(-10000)
 	when := paymentperiod.ENDING
 
-	fv := gofinancial.Fv(rate, nper, payment,pv,when)
+	fv := gofinancial.Fv(rate, nper, payment, pv, when)
 	fmt.Printf("fv:%v", math.Round(fv))
 	// Output:
 	// fv:149716
-
 }
 
 // If you have a loan of 1,00,000 to be paid after 2 years, with 18% p.a. compounded annually, how much of the total payment done each month will be interest ?
@@ -61,8 +59,8 @@ func ExampleIPmt_loan() {
 	when := paymentperiod.ENDING
 
 	for i := int64(0); i < nper; i++ {
-	pmt := gofinancial.IPmt(rate, i+1,nper, pv, fv, when)
-	fmt.Printf("period:%d interest:%v\n", i+1, math.Round(pmt))
+		pmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d interest:%v\n", i+1, math.Round(pmt))
 	}
 	// Output:
 	// period:1 interest:-1500
@@ -89,12 +87,11 @@ func ExampleIPmt_loan() {
 	// period:22 interest:-218
 	// period:23 interest:-146
 	// period:24 interest:-74
-
 }
 
 // If an investment gives 6% rate of return compounded annually, how much interest will you earn each year against your
 // yearly payments(71574) to get 10,00,000 amount after 10 years
-func ExampleIPmt_investment(){
+func ExampleIPmt_investment() {
 	rate := 0.06
 	nper := int64(10)
 	pv := float64(0)
@@ -120,15 +117,15 @@ func ExampleIPmt_investment(){
 
 // If you have a loan of 1,00,000 to be paid after 2 years, with 18% p.a. compounded annually, how much total payment done each month will be principal ?
 func ExamplePPmt_loan() {
-	rate := 0.18/12
-	nper := int64(12*2)
+	rate := 0.18 / 12
+	nper := int64(12 * 2)
 	pv := float64(100000)
 	fv := float64(0)
 	when := paymentperiod.ENDING
 
-	for i:=int64(0);i<nper;i++{
-		pmt := gofinancial.PPmt(rate,i+1, nper, pv, fv, when,true)
-		fmt.Printf("period:%d principal:%v\n", i+1,math.Round(pmt))
+	for i := int64(0); i < nper; i++ {
+		pmt := gofinancial.PPmt(rate, i+1, nper, pv, fv, when, true)
+		fmt.Printf("period:%d principal:%v\n", i+1, math.Round(pmt))
 	}
 	// Output:
 	// period:1 principal:-3492

@@ -1,11 +1,12 @@
 package gofinancial_test
 
 import (
+	"time"
+
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/frequency"
 	"github.com/razorpay/go-financial/enums/interesttype"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
-	"time"
 )
 
 // This example generates amortization table for a loan of 20 lakhs over 15years at 12% per annum.
@@ -14,30 +15,30 @@ func ExampleAmortization_GenerateTable() {
 	if err != nil {
 		panic("location loading error")
 	}
-  	currentDate := time.Date(2009,11,11,04,30,00,0,loc)
+	currentDate := time.Date(2009, 11, 11, 0o4, 30, 0o0, 0, loc)
 	config := gofinancial.Config{
 
 		// start date is inclusive
-		StartDate:      currentDate,
+		StartDate: currentDate,
 
 		// end date is inclusive.
-		EndDate:        currentDate.AddDate(15, 0, 0).AddDate(0, 0, -1),
-		Frequency:      frequency.ANNUALLY,
+		EndDate:   currentDate.AddDate(15, 0, 0).AddDate(0, 0, -1),
+		Frequency: frequency.ANNUALLY,
 
 		// AmountBorrowed is in paisa
 		AmountBorrowed: 200000000,
 
 		// InterestType can be flat or reducing
-		InterestType:   interesttype.REDUCING,
+		InterestType: interesttype.REDUCING,
 
 		// interest is in basis points
-		Interest:       1200,
+		Interest: 1200,
 
 		// amount is paid at the end of the period
-		PaymentPeriod:  paymentperiod.ENDING,
+		PaymentPeriod: paymentperiod.ENDING,
 
 		// all values will be rounded
-		Round:          true,
+		Round: true,
 	}
 	amortization, err := gofinancial.NewAmortization(&config)
 	if err != nil {
@@ -45,7 +46,7 @@ func ExampleAmortization_GenerateTable() {
 	}
 
 	rows, err := amortization.GenerateTable()
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 	gofinancial.PrintRows(rows)
@@ -173,4 +174,3 @@ func ExampleAmortization_GenerateTable() {
 	//	}
 	//]
 }
-
