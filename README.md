@@ -9,9 +9,7 @@ the [numpy-financial](https://github.com/numpy/numpy-financial) library.
 [![unit-tests status](https://github.com/razorpay/go-financial/workflows/unit-tests/badge.svg?branch=master "unit-tests")]("https://github.com/razorpay/go-financial/workflows/unit-tests/badge.svg?branch=master")
 [![Go Report Card](https://goreportcard.com/badge/github.com/razorpay/go-financial)](https://goreportcard.com/report/github.com/razorpay/go-financial)
 [![codecov](https://codecov.io/gh/razorpay/go-financial/branch/master/graph/badge.svg)](https://codecov.io/gh/razorpay/go-financial)
-
-[![GoDoc](https://godoc.org/github.com/razorpay/go-financial?status.svg)](https://godoc.org/github.com/razorpay/go-financial)
-[![Release](https://img.shields.io/github/release/razorpay/go-financial.svg?style=flat-square)](https://github.com/razorpay/go-financial/releases)
+[![GoDoc](https://godoc.org/github.com/razorpay/go-financial?status.svg)](https://godoc.org/github.com/razorpay/go-financial) [![Release](https://img.shields.io/github/release/razorpay/go-financial.svg?style=flat-square)](https://github.com/razorpay/go-financial/releases)
 
 Currently, only some functions are ported,
 which are as follows:
