@@ -1,4 +1,4 @@
-package calculator
+package gofinancial
 
 import (
 	"fmt"

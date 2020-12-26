@@ -1,4 +1,4 @@
-package calculator
+package gofinancial
 
 import (
 	"errors"
@@ -11,6 +11,7 @@ import (
 	"github.com/razorpay/go-financial/enums/frequency"
 )
 
+// Config is used to store details used in generation of amortization table.
 type Config struct {
 	StartDate      time.Time
 	EndDate        time.Time
@@ -25,7 +26,7 @@ type Config struct {
 	endDates       []time.Time // derived
 }
 
-func (c *Config) SetPeriodsAndDates() error {
+func (c *Config) setPeriodsAndDates() error {
 	sy, sm, sd := c.StartDate.Date()
 	startDate := time.Date(sy, sm, sd, 0, 0, 0, 0, c.StartDate.Location())
 

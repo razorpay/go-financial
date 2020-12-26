@@ -1,4 +1,4 @@
-package calculator
+package gofinancial
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/razorpay/go-financial/enums/paymentperiod"
 )
 
-func Test_pmt(t *testing.T) {
+func Test_Pmt(t *testing.T) {
 	type args struct {
 		rate float64
 		nper int64
@@ -39,7 +39,7 @@ func Test_pmt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := pmt(tt.args.rate, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when); assertions.ShouldAlmostEqual(got, tt.want) != "" {
+			if got := Pmt(tt.args.rate, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when); assertions.ShouldAlmostEqual(got, tt.want) != "" {
 				if math.IsNaN(tt.want) && math.IsNaN(got) {
 					return
 				}
@@ -50,7 +50,7 @@ func Test_pmt(t *testing.T) {
 	}
 }
 
-func Test_fv(t *testing.T) {
+func Test_Fv(t *testing.T) {
 	type args struct {
 		rate float64
 		nper int64
@@ -76,14 +76,14 @@ func Test_fv(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := fv(tt.args.rate, tt.args.nper, tt.args.pmt, tt.args.pv, tt.args.when); got != tt.want {
+			if got := Fv(tt.args.rate, tt.args.nper, tt.args.pmt, tt.args.pv, tt.args.when); got != tt.want {
 				t.Errorf("fv() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_ipmt(t *testing.T) {
+func Test_IPmt(t *testing.T) {
 	type args struct {
 		rate float64
 		per  int64
@@ -136,14 +136,14 @@ func Test_ipmt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ipmt(tt.args.rate, tt.args.per, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when); assertions.ShouldAlmostEqual(got, tt.want) != "" {
+			if got := IPmt(tt.args.rate, tt.args.per, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when); assertions.ShouldAlmostEqual(got, tt.want) != "" {
 				t.Errorf("ipmt() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func Test_ppmt(t *testing.T) {
+func Test_PPmt(t *testing.T) {
 	type args struct {
 		rate  float64
 		per   int64
@@ -226,7 +226,7 @@ func Test_ppmt(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ppmt(tt.args.rate, tt.args.per, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when, tt.args.round); assertions.ShouldAlmostEqual(got, tt.want) != "" {
+			if got := PPmt(tt.args.rate, tt.args.per, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when, tt.args.round); assertions.ShouldAlmostEqual(got, tt.want) != "" {
 				t.Errorf("ppmt() = %v, want %v", got, tt.want)
 			}
 		})

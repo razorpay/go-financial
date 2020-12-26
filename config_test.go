@@ -1,4 +1,4 @@
-package calculator
+package gofinancial
 
 import (
 	"fmt"
@@ -19,9 +19,6 @@ func TestConfig_SetPeriodsAndDates(t *testing.T) {
 		EndDate   time.Time
 		Frequency Frequency.Type
 	}
-	// start inclusive.
-	// end not inclusive
-
 	tests := []struct {
 		name        string
 		fields      fields
@@ -207,7 +204,7 @@ func TestConfig_SetPeriodsAndDates(t *testing.T) {
 				EndDate:   tt.fields.EndDate,
 				Frequency: tt.fields.Frequency,
 			}
-			if err := c.SetPeriodsAndDates(); (err != nil) != tt.wantErr {
+			if err := c.setPeriodsAndDates(); (err != nil) != tt.wantErr {
 				t.Fatalf("SetPeriodsAndDates() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if c.periods != tt.wantPeriods {
