@@ -1,4 +1,4 @@
-package calculator
+package gofinancial
 
 import (
 	"encoding/json"
@@ -13,14 +13,16 @@ import (
 	"github.com/razorpay/go-financial/enums/interesttype"
 )
 
-type amortization struct {
+// Amortization struct holds the configuration and financial details.
+type Amortization struct {
 	Config    *Config
 	Financial Financial
 }
 
-func NewAmortization(c *Config) (*amortization, error) {
-	a := amortization{Config: c}
-	if err := a.Config.SetPeriodsAndDates(); err != nil {
+// NewAmortization return a new amortisation object with config and financial fields initialised.
+func NewAmortization(c *Config) (*Amortization, error) {
+	a := Amortization{Config: c}
+	if err := a.Config.setPeriodsAndDates(); err != nil {
 		return nil, err
 	}
 
@@ -33,6 +35,7 @@ func NewAmortization(c *Config) (*amortization, error) {
 	return &a, nil
 }
 
+// Row represents a single row in an amortization schedule.
 type Row struct {
 	Period    int64
 	StartDate time.Time
@@ -42,7 +45,8 @@ type Row struct {
 	Principal float64
 }
 
-func (a amortization) GenerateTable() ([]Row, error) {
+// GenerateTable constructs the amortization table based on the configuration.
+func (a Amortization) GenerateTable() ([]Row, error) {
 	var result []Row
 	for i := int64(1); i <= a.Config.periods; i++ {
 		var row Row
@@ -74,6 +78,8 @@ func (a amortization) GenerateTable() ([]Row, error) {
 	return result, nil
 }
 
+// PerformErrorCorrectionDueToRounding takes care of errors in principal and payment amount due to rounding.
+// Only the final row is adjusted for rounding errors.
 func PerformErrorCorrectionDueToRounding(finalRow *Row, rows []Row, principal int64, round bool) {
 	principalCollected := finalRow.Principal
 	for _, row := range rows {
@@ -101,11 +107,13 @@ func PerformErrorCorrectionDueToRounding(finalRow *Row, rows []Row, principal in
 	}
 }
 
+// PrintRows outputs a formatted json for given rows as input.
 func PrintRows(rows []Row) {
-	bytes, _ := json.MarshalIndent(rows, "", "    ")
+	bytes, _ := json.MarshalIndent(rows, "", "\t")
 	fmt.Printf("%s", bytes)
 }
 
+// PlotRows uses the go-echarts package to generate an interactive plot from the Rows array.
 func PlotRows(rows []Row, fileName string) error {
 	bar := charts.NewBar()
 	bar.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
