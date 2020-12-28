@@ -97,10 +97,7 @@ when  : specification of whether payment is made at the beginning (when = 1)
         or the end (when = 0) of each period  
 ```  
 
-Fv computes future value at the end of some periods(nper) by solving the  
-following equation:  
-  
- `fv + pv*(1+rate)**nper + pmt*(1 + rate*when)/rate*((1 + rate)**nper - 1) == 0  `
+Fv computes future value at the end of some periods(nper).
 
 ### Example(Fv)
 
@@ -148,12 +145,9 @@ when  : specification of whether payment is made at the
 ``` 
 
 Pmt compute the fixed payment(principal + interest) against a loan amount ( fv =  0).  
-It can also be used to calculate the recurring payments needed to achieve a  certain future value given an initial deposit, a fixed periodically compounded interest rate, and the total number of periods.  
-  
-It is obtained by solving the following equation:  
-`  
-fv + pv*(1 + rate)**nper + pmt*(1 + rate*when)/rate*((1 + rate)**nper - 1) == 0  
-`
+It can also be used to calculate the recurring payments needed to achieve a  certain future value given an initial deposit,
+a fixed periodically compounded interest rate, and the total number of periods.  
+
 ### Example(Pmt-Loan)
 If you have a loan of 1,00,000 to be paid after 2 years, with 18% p.a. compounded annually, how much total payment will you have to do each month? This example generates the total monthly payment(principal plus interest) needed for a loan of 1,00,000 over 2 years with 18% rate of interest compounded monthly
 
@@ -331,8 +325,16 @@ func PPmt(rate float64, per int64, nper int64, pv float64, fv float64, when paym
 PPmt computes principal payment for a loan under a given period.  
   
 Params:  
-  
- rate  : rate of interest compounded once per period per   : period under consideration nper  : total number of periods to be compounded for pv    : present value (e.g., an amount borrowed) fv    : future value (e.g., 0) when  : specification of whether payment is made at the beginning (when = 1) or the end (when = 0) of each period  
+```text
+rate  : rate of interest compounded once per period 
+per   : period under consideration 
+nper  : total number of periods to be compounded for 
+pv    : present value (e.g., an amount borrowed) 
+fv    : future value (e.g., 0) 
+when  : specification of whether payment is made at 
+        the beginning (when = 1) or the end (when = 0) of each period  
+```
+
 ### Example(PPmt-Loan)
 If you have a loan of 1,00,000 to be paid after 2 years, with 18% p.a. compounded annually, how much total payment done each month will be principal ?
 ```go
