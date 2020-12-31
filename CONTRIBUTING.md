@@ -11,6 +11,7 @@ Issue that pull request!
 1. Fork the repo and create your branch from master.
 1. hack, hack, hack.
 1. If you've added code that should be tested, add tests.
+1. If the functions are exported, make sure they are documented with examples.
 1. Update README if required.
 1. Make sure that unit tests are passing `make test-unit`.
 1. Make sure that lint-checks are also passing `make lint-check`.  
