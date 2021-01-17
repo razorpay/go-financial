@@ -1,7 +1,11 @@
 package gofinancial
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
 	"testing"
 	"time"
 
@@ -227,4 +231,113 @@ func getConfigDto(frequency frequency.Type, round bool, interestType interesttyp
 		Interest:       interest,
 		Round:          round,
 	}
+}
+
+func TestPlotRows(t *testing.T) {
+	type args struct {
+		rows     []Row
+		fileName string
+	}
+	tests := []struct {
+		name          string
+		args          args
+		wantErr       bool
+		err           string
+		expectedHtml  string
+		currentWriter io.Writer
+	}{
+		{
+			"plot for loan schedule",
+			args{
+				rows:     getRowsWithRounding(t),
+				fileName: "loan-schedule",
+			},
+			false,
+			"",
+			getExpectedHtmlString(),
+			bytes.NewBufferString(""),
+		},
+		{
+			"error while writing",
+			args{
+				rows:     getRowsWithRounding(t),
+				fileName: "loan-schedule",
+			},
+			true,
+			"error writer",
+			getExpectedHtmlString(),
+			&errorWriter{},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			writer = tt.currentWriter
+			var err error
+			if err = PlotRows(tt.args.rows, tt.args.fileName); (err != nil) != tt.wantErr {
+				t.Errorf("PlotRows() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr {
+				writer := writer.(*bytes.Buffer)
+				result := assertions.ShouldEqual(getHtmlWithoutUniqueId(tt.expectedHtml), getHtmlWithoutUniqueId(writer.String()))
+				if result != "" {
+					t.Errorf("PlotRows() expected != actual. diff:%v", result)
+				}
+			} else {
+				if err == nil || tt.err != err.Error() {
+					t.Fatalf("Error values are not equal. Expected:%v, Actual:%v", tt.err, err)
+				}
+			}
+		})
+	}
+}
+
+type errorWriter struct{}
+
+func (er *errorWriter) Write(p []byte) (n int, err error) {
+	return 1, errors.New("error writer")
+}
+
+func getHtmlWithoutUniqueId(input string) string {
+	lines := strings.Split(input, "\n")
+	var result []string
+	for i := range lines {
+		// skipping the unique id lines
+		if i >= 11 && i <= 18 {
+			continue
+		}
+		result = append(result, lines[i])
+	}
+	return strings.Join(result, "\n")
+}
+
+func getExpectedHtmlString() string {
+	return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Awesome go-echarts</title>
+    <script src="https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js"></script>
+</head>
+
+<body>
+<div class="container">
+    <div class="item" id="upuUxUZbTXgQ" style="width:1200px;height:600px;"></div>
+</div>
+
+<script type="text/javascript">
+    "use strict";
+    let goecharts_upuUxUZbTXgQ = echarts.init(document.getElementById('upuUxUZbTXgQ'), "white");
+    let option_upuUxUZbTXgQ = {"color":["#c23531","#2f4554","#61a0a8","#d48265","#91c7ae","#749f83","#ca8622","#bda29a","#6e7074","#546570"],"dataZoom":[{"type":"inside","end":50},{"type":"slider","end":50}],"legend":{"show":true},"series":[{"name":"Principal","type":"bar","stack":"stackA","waveAnimation":false,"data":[{"value":32871},{"value":33528},{"value":34199},{"value":34883},{"value":35581},{"value":36292},{"value":37018},{"value":37758},{"value":38514},{"value":39284},{"value":40070},{"value":40871},{"value":41688},{"value":42522},{"value":43373},{"value":44240},{"value":45125},{"value":46027},{"value":46948},{"value":47887},{"value":48845},{"value":49822},{"value":50818},{"value":51836}]},{"name":"Interest","type":"bar","stack":"stackA","waveAnimation":false,"data":[{"name":"20000","value":20000},{"name":"19343","value":19343},{"name":"18672","value":18672},{"name":"17988","value":17988},{"name":"17290","value":17290},{"name":"16579","value":16579},{"name":"15853","value":15853},{"name":"15113","value":15113},{"name":"14357","value":14357},{"name":"13587","value":13587},{"name":"12801","value":12801},{"name":"12000","value":12000},{"name":"11183","value":11183},{"name":"10349","value":10349},{"name":"9498","value":9498},{"name":"8631","value":8631},{"name":"7746","value":7746},{"name":"6844","value":6844},{"name":"5923","value":5923},{"name":"4984","value":4984},{"name":"4026","value":4026},{"name":"3049","value":3049},{"name":"2053","value":2053},{"name":"1037","value":1037}]},{"name":"Payment","type":"bar","stack":"stackA","waveAnimation":false,"data":[{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52871},{"value":52873}]}],"title":{"text":"Loan repayment schedule"},"toolbox":{"show":true},"tooltip":{"show":false},"xAxis":[{"data":["2020-05-14","2020-06-14","2020-07-14","2020-08-14","2020-09-14","2020-10-14","2020-11-14","2020-12-14","2021-01-14","2021-02-14","2021-03-14","2021-04-14","2021-05-14","2021-06-14","2021-07-14","2021-08-14","2021-09-14","2021-10-14","2021-11-14","2021-12-14","2022-01-14","2022-02-14","2022-03-14","2022-04-14"]}],"yAxis":[{}]};
+    goecharts_upuUxUZbTXgQ.setOption(option_upuUxUZbTXgQ);
+</script>
+
+<style>
+    .container {margin-top:30px; display: flex;justify-content: center;align-items: center;}
+    .item {margin: auto;}
+</style>
+</body>
+</html>
+`
 }

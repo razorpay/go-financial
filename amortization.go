@@ -3,6 +3,7 @@ package gofinancial
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"os"
 	"path"
@@ -12,6 +13,8 @@ import (
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/razorpay/go-financial/enums/interesttype"
 )
+
+var writer io.Writer
 
 // Amortization struct holds the configuration and financial details.
 type Amortization struct {
@@ -160,9 +163,18 @@ func PlotRows(rows []Row, fileName string) error {
 		panic(err)
 	}
 	filePath := path.Join(completePath, fileName)
-	f, _ := os.Create(fmt.Sprintf("%s.html", filePath))
-	if err := bar.Render(f); err != nil {
+	f, err := os.Create(fmt.Sprintf("%s.html", filePath))
+	if err != nil {
 		return err
 	}
-	return nil
+	defer func() {
+		err = f.Close()
+	}()
+	if writer == nil {
+		writer = f
+	}
+	if err := bar.Render(writer); err != nil {
+		return err
+	}
+	return err
 }
