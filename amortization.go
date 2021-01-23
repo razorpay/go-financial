@@ -14,8 +14,6 @@ import (
 	"github.com/razorpay/go-financial/enums/interesttype"
 )
 
-var writer io.Writer
-
 // Amortization struct holds the configuration and financial details.
 type Amortization struct {
 	Config    *Config
@@ -117,7 +115,29 @@ func PrintRows(rows []Row) {
 }
 
 // PlotRows uses the go-echarts package to generate an interactive plot from the Rows array.
-func PlotRows(rows []Row, fileName string) error {
+func PlotRows(rows []Row, fileName string) (err error) {
+	bar := getStackedBarPlot(rows)
+	completePath, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	filePath := path.Join(completePath, fileName)
+	f, err := os.Create(fmt.Sprintf("%s.html", filePath))
+	if err != nil {
+		return err
+	}
+	defer func() {
+		// setting named err
+		ferr := f.Close()
+		if err == nil {
+			err = ferr
+		}
+	}()
+	return renderer(bar, f)
+}
+
+// getStackedBarPlot returns an instance for stacked bar plot.
+func getStackedBarPlot(rows []Row) *charts.Bar {
 	bar := charts.NewBar()
 	bar.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
 		Title: "Loan repayment schedule",
@@ -158,23 +178,10 @@ func PlotRows(rows []Row, fileName string) error {
 		charts.WithBarChartOpts(opts.BarChart{
 			Stack: "stackA",
 		}))
-	completePath, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	filePath := path.Join(completePath, fileName)
-	f, err := os.Create(fmt.Sprintf("%s.html", filePath))
-	if err != nil {
-		return err
-	}
-	defer func() {
-		err = f.Close()
-	}()
-	if writer == nil {
-		writer = f
-	}
-	if err := bar.Render(writer); err != nil {
-		return err
-	}
-	return err
+	return bar
+}
+
+// renderer renders the bar into the writer interface
+func renderer(bar *charts.Bar, writer io.Writer) error {
+	return bar.Render(writer)
 }

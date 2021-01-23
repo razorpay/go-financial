@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-echarts/go-echarts/v2/charts"
+
 	"github.com/razorpay/go-financial/enums/interesttype"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
 	"github.com/smartystreets/assertions"
@@ -239,12 +241,9 @@ func TestPlotRows(t *testing.T) {
 		fileName string
 	}
 	tests := []struct {
-		name          string
-		args          args
-		wantErr       bool
-		err           string
-		expectedHtml  string
-		currentWriter io.Writer
+		name    string
+		args    args
+		wantErr bool
 	}{
 		{
 			"plot for loan schedule",
@@ -253,40 +252,71 @@ func TestPlotRows(t *testing.T) {
 				fileName: "loan-schedule",
 			},
 			false,
-			"",
-			getExpectedHtmlString(),
-			bytes.NewBufferString(""),
-		},
-		{
-			"error while writing",
-			args{
-				rows:     getRowsWithRounding(t),
-				fileName: "loan-schedule",
-			},
-			true,
-			"error writer",
-			getExpectedHtmlString(),
-			&errorWriter{},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			writer = tt.currentWriter
 			var err error
 			if err = PlotRows(tt.args.rows, tt.args.fileName); (err != nil) != tt.wantErr {
 				t.Errorf("PlotRows() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !tt.wantErr {
-				writer := writer.(*bytes.Buffer)
-				result := assertions.ShouldEqual(getHtmlWithoutUniqueId(tt.expectedHtml), getHtmlWithoutUniqueId(writer.String()))
-				if result != "" {
-					t.Errorf("PlotRows() expected != actual. diff:%v", result)
-				}
+		})
+	}
+}
+
+func TestRenderer(t *testing.T) {
+	type args struct {
+		bar *charts.Bar
+	}
+	rows := getRowsWithRounding(t)
+	tests := []struct {
+		name         string
+		args         args
+		writer       *bytes.Buffer
+		stringWanted string
+		wantErr      bool
+		err          error
+		errWriter    io.Writer
+	}{
+		{
+			"success",
+			args{
+				bar: getStackedBarPlot(rows),
+			},
+			&bytes.Buffer{},
+			getExpectedHtmlString(),
+			false,
+			nil,
+			nil,
+		},
+		{
+			"error while writing",
+			args{
+				bar: getStackedBarPlot(rows),
+			},
+			nil,
+			getExpectedHtmlString(),
+			true,
+			errors.New("error writer"),
+			&errorWriter{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var err error
+			if tt.wantErr {
+				err = renderer(tt.args.bar, tt.errWriter)
 			} else {
-				if err == nil || tt.err != err.Error() {
-					t.Fatalf("Error values are not equal. Expected:%v, Actual:%v", tt.err, err)
+				err = renderer(tt.args.bar, tt.writer)
+				result := assertions.ShouldEqual(getHtmlWithoutUniqueId(tt.stringWanted), getHtmlWithoutUniqueId(tt.writer.String()))
+				if result != "" {
+					t.Errorf("Rendere() expected != actual. diff:%v", result)
 				}
+			}
+			if err != nil && err.Error() != tt.err.Error() {
+				t.Errorf("Renderer() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}
