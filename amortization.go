@@ -119,7 +119,7 @@ func PlotRows(rows []Row, fileName string) (err error) {
 	bar := getStackedBarPlot(rows)
 	completePath, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	filePath := path.Join(completePath, fileName)
 	f, err := os.Create(fmt.Sprintf("%s.html", filePath))
