@@ -201,7 +201,7 @@ References:
 func Pv(rate float64, nper int64, pmt float64, fv float64, when paymentperiod.Type) float64 {
 	factor := math.Pow(1.0+float64(rate), float64(nper))
 	secondFactor := (1 + rate*when.Value()) * (factor - 1) / rate
-	return (-fv + pmt*secondFactor) / factor
+	return (-fv - pmt*secondFactor) / factor
 }
 
 /*

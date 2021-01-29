@@ -20,10 +20,10 @@ which are as follows:
 | pmt                          |  ✅   |  
 | ppmt                         |  ✅   |  
 | nper                         |      |  
-| pv                           |      |  
+| pv                           |  ✅   |  
 | rate                         |      |  
 | irr                          |      |  
-| npv                          |      |  
+| npv                          |  ✅   |  
 | mirr                         |      |  
   
 # Index  
@@ -33,6 +33,8 @@ While the numpy-financial package contains a set of elementary financial functio
     + [Generated plot](#generated-plot)
   * [Fv(Future value)](#fv)
     + [Example(Fv)](#examplefv)
+  * [Pv(Present value)](#pv)
+  * [Npv(Net present value)](#npv)  
   * [Pmt(Payment)](#pmt)
     + [Example(Pmt-Loan)](#examplepmt-loan)
     + [Example(Pmt-Investment)](#examplepmt-investment)
@@ -148,6 +150,40 @@ func main() {
 }
 ```
 [Run on go-playground](https://play.golang.org/p/l2-5aCHTBmH)
+
+
+## Pv  
+
+```go  
+func Pv(rate float64, nper int64, pmt float64, fv float64, when paymentperiod.Type) float64 
+```  
+Params:
+```text
+fv	: a future value
+ rate	: an interest rate compounded once per period
+ nper	: total number of periods
+ pmt	: a (fixed) payment, paid either
+	  at the beginning (when =  1) or the end (when = 0) of each period
+ when	: specification of whether payment is made
+	  at the beginning (when = 1) or the end
+	  (when = 0) of each period
+```
+
+Pv computes present value some periods(nper) before the future value.
+
+
+## Npv
+
+```go  
+func Npv(rate float64, values []float64) float64 
+```  
+Params:
+```text
+ rate	: a discount rate compounded once per period
+ values	: the value of the cash flow for that time period. Values provided here must be an array of float64
+```
+
+Npv computes net present value based on the discount rate and the values of cash flow over the course of the cash flow period
 
 
 ##  Pmt  
