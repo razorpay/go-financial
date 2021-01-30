@@ -169,7 +169,8 @@ func ExamplePv() {
 	// pv:-10000
 }
 
-//Given a rate of 0.281 per period and initial deposit of 100 followed by withdrawls of 39, 59, 55, 20. What is the net present value of the cash flow ?
+//Given a rate of 0.281 per period and initial deposit of 100 followed by withdrawls of 39, 59, 55, 20.
+// What is the net present value of the cash flow ?
 func ExampleNpv() {
 	rate := 0.281
 	values := []float64{-100, 39, 59, 55, 20}
