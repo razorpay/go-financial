@@ -12,8 +12,6 @@ package gofinancial
 // TODO: update readme
 
 import (
-	"fmt"
-
 	"github.com/razorpay/go-financial/enums/paymentperiod"
 	"github.com/shopspring/decimal"
 )
@@ -48,11 +46,6 @@ References:
 	OpenDocument-formula-20090508.odt
 */
 func Pmt(rate decimal.Decimal, nper int64, pv int64, fv int64, when paymentperiod.Type) decimal.Decimal {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("Recovered in PMT", r)
-		}
-	}()
 	one := decimal.NewFromInt(1)
 	minusOne := decimal.NewFromInt(-1)
 	dNper := decimal.NewFromInt(nper)
