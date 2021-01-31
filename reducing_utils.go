@@ -9,10 +9,13 @@ Currently, only some functions are ported, the remaining will be ported soon.
 */
 package gofinancial
 
+// TODO: update readme
+
 import (
-	"math"
+	"fmt"
 
 	"github.com/razorpay/go-financial/enums/paymentperiod"
+	"github.com/shopspring/decimal"
 )
 
 /*
@@ -44,10 +47,24 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func Pmt(rate float64, nper int64, pv float64, fv float64, when paymentperiod.Type) float64 {
-	factor := math.Pow(1.0+float64(rate), float64(nper))
-	secondFactor := (factor - 1) * (1 + rate*when.Value()) / rate
-	return -(pv*factor + fv) / secondFactor
+func Pmt(rate decimal.Decimal, nper int64, pv int64, fv int64, when paymentperiod.Type) decimal.Decimal {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in PMT", r)
+		}
+	}()
+	one := decimal.NewFromInt(1)
+	minusOne := decimal.NewFromInt(-1)
+	dNper := decimal.NewFromInt(nper)
+	dWhen := decimal.NewFromInt(when.Value())
+	dRateWithWhen := rate.Mul(dWhen)
+	dPv := decimal.NewFromInt(pv)
+	dFv := decimal.NewFromInt(fv)
+
+	factor := one.Add(rate).Pow(dNper)
+	secondFactor := factor.Sub(one).Mul(one.Add(dRateWithWhen)).Div(rate)
+
+	return dPv.Mul(factor).Add(dFv).Div(secondFactor).Mul(minusOne)
 }
 
 /*
@@ -74,23 +91,26 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func IPmt(rate float64, per int64, nper int64, pv float64, fv float64, when paymentperiod.Type) float64 {
+func IPmt(rate decimal.Decimal, per int64, nper int64, pv int64, fv int64, when paymentperiod.Type) *decimal.Decimal {
+	// TODO: update nan and remove any rounding here.
 	totalPmt := Pmt(rate, nper, pv, fv, when)
-	ipmt := rbl(rate, per, totalPmt, pv, when) * rate
+	one := decimal.NewFromInt(1)
+	ipmt := rbl(rate, per, totalPmt.IntPart(), pv, when).Mul(rate)
 	if when == paymentperiod.BEGINNING {
 		if per < 1 {
-			return math.NaN()
+			return nil
 		} else if per == 1 {
-			return 0
+			return &decimal.Zero
 		} else {
 			// paying at the beginning, so discount it.
-			return ipmt / (1 + rate)
+			val := ipmt.Div(one.Add(rate))
+			return &val
 		}
 	} else {
 		if per < 1 {
-			return math.NaN()
+			return nil
 		} else {
-			return ipmt
+			return &ipmt
 		}
 	}
 }
@@ -119,18 +139,14 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func PPmt(rate float64, per int64, nper int64, pv float64, fv float64, when paymentperiod.Type, round bool) float64 {
+func PPmt(rate decimal.Decimal, per int64, nper int64, pv int64, fv int64, when paymentperiod.Type) decimal.Decimal {
 	total := Pmt(rate, nper, pv, fv, when)
 	ipmt := IPmt(rate, per, nper, pv, fv, when)
-	if round {
-		return math.Round(total) - math.Round(ipmt)
-	} else {
-		return total - ipmt
-	}
+	return total.Sub(*ipmt)
 }
 
 // Rbl computes remaining balance
-func rbl(rate float64, per int64, pmt float64, pv float64, when paymentperiod.Type) float64 {
+func rbl(rate decimal.Decimal, per int64, pmt int64, pv int64, when paymentperiod.Type) decimal.Decimal {
 	return Fv(rate, (per - 1), pmt, pv, when)
 }
 
@@ -163,8 +179,17 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func Fv(rate float64, nper int64, pmt float64, pv float64, when paymentperiod.Type) float64 {
-	factor := math.Pow(1.0+float64(rate), float64(nper))
-	secondFactor := (1 + rate*when.Value()) * (factor - 1) / rate
-	return -pv*factor - pmt*secondFactor
+func Fv(rate decimal.Decimal, nper int64, pmt int64, pv int64, when paymentperiod.Type) decimal.Decimal {
+	one := decimal.NewFromInt(1)
+	minusOne := decimal.NewFromInt(-1)
+	dNper := decimal.NewFromInt(nper)
+	dPmt := decimal.NewFromInt(pmt)
+	dPv := decimal.NewFromInt(pv)
+	dWhen := decimal.NewFromInt(when.Value())
+	dRateWithWhen := rate.Mul(dWhen)
+
+	factor := one.Add(rate).Pow(dNper)
+	secondFactor := factor.Sub(one).Mul(one.Add(dRateWithWhen)).Div(rate)
+
+	return dPv.Mul(factor).Add(dPmt.Mul(secondFactor)).Mul(minusOne)
 }

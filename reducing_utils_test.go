@@ -1,50 +1,44 @@
 package gofinancial
 
 import (
-	"fmt"
-	"math"
 	"testing"
 
-	"github.com/smartystreets/assertions"
+	"github.com/shopspring/decimal"
 
 	"github.com/razorpay/go-financial/enums/paymentperiod"
 )
 
 func Test_Pmt(t *testing.T) {
 	type args struct {
-		rate float64
+		rate decimal.Decimal
 		nper int64
-		pv   float64
-		fv   float64
+		pv   int64
+		fv   int64
 		when paymentperiod.Type
 	}
 	tests := []struct {
 		name string
 		args args
-		want float64
+		want decimal.Decimal
 	}{
-
 		{
-			"7.5% p.a., monthly basis, 15 yrs", args{0.075 / 12, 12 * 15, 200000, 0, paymentperiod.ENDING}, -1854.0247200054675,
+			"7.5% p.a., monthly basis, 15 yrs", args{decimal.NewFromFloat(0.075 / 12), 12 * 15, 200000, 0, paymentperiod.ENDING}, decimal.NewFromFloat(-1854.0247200054675),
 		},
 		{
-			"nan case", args{12, 400, 10000, 5000, paymentperiod.BEGINNING}, math.NaN(),
+			"bigDecimal case. would give nan if it were float64.", args{decimal.NewFromFloat(12), 400, 10000, 5000, paymentperiod.BEGINNING}, decimal.NewFromFloat(-9230.7692307692307692),
 		},
 		{
-			"24% p.a., monthly basis, 2 yrs", args{0.24 / 12, 12 * 2, 1000000, 0, 0}, -52871.097253249915,
+			"24% p.a., monthly basis, 2 yrs", args{decimal.NewFromFloat(0.24 / 12), 12 * 2, 1000000, 0, 0}, decimal.NewFromFloat(-52871.097253249915),
 		},
 		{
-			"8% p.a., monthly basis, 5 yrs", args{0.08 / 12, 12 * 5, 15000, 0, 0}, -304.1459143262052370338701494,
+			"8% p.a., monthly basis, 5 yrs", args{decimal.NewFromFloat(0.08 / 12), 12 * 5, 15000, 0, 0}, decimal.NewFromFloat(-304.1459143262052370338701494),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Pmt(tt.args.rate, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when); assertions.ShouldAlmostEqual(got, tt.want) != "" {
-				if math.IsNaN(tt.want) && math.IsNaN(got) {
-					return
-				}
-				fmt.Printf("%0.f", got)
-				t.Errorf("pmt() = %v, want %v", got, tt.want)
+			got := Pmt(tt.args.rate, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when)
+			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil {
+				t.Errorf("error: %v, pmt() = %v, want %v", err.Error(), got.BigInt().String(), tt.want)
 			}
 		})
 	}
@@ -52,32 +46,33 @@ func Test_Pmt(t *testing.T) {
 
 func Test_Fv(t *testing.T) {
 	type args struct {
-		rate float64
+		rate decimal.Decimal
 		nper int64
-		pmt  float64
-		pv   float64
+		pmt  int64
+		pv   int64
 		when paymentperiod.Type
 	}
 	tests := []struct {
 		name string
 		args args
-		want float64
+		want decimal.Decimal
 	}{
 		{
 			name: "success", args: args{
-				rate: 0.05 / 12,
+				rate: decimal.NewFromFloat(0.05 / 12),
 				nper: 10 * 12,
 				pmt:  -100,
 				pv:   -100,
 				when: paymentperiod.ENDING,
 			},
-			want: 15692.928894335893,
+			want: decimal.NewFromFloat(15692.928894335893),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Fv(tt.args.rate, tt.args.nper, tt.args.pmt, tt.args.pv, tt.args.when); got != tt.want {
-				t.Errorf("fv() = %v, want %v", got, tt.want)
+			got := Fv(tt.args.rate, tt.args.nper, tt.args.pmt, tt.args.pv, tt.args.when)
+			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil {
+				t.Errorf("error = %v, fv() = %v, want %v", err.Error(), got, tt.want)
 			}
 		})
 	}
@@ -85,149 +80,147 @@ func Test_Fv(t *testing.T) {
 
 func Test_IPmt(t *testing.T) {
 	type args struct {
-		rate float64
+		rate decimal.Decimal
 		per  int64
 		nper int64
-		pv   float64
-		fv   float64
+		pv   int64
+		fv   int64
 		when paymentperiod.Type
 	}
 	tests := []struct {
 		name string
 		args args
-		want float64
+		want decimal.Decimal
 	}{
 		{
 			name: "1period",
 			args: args{
-				rate: 0.0824 / 12,
+				rate: decimal.NewFromFloat(0.0824 / 12),
 				per:  1,
 				nper: 1 * 12,
 				pv:   2500,
 				fv:   0,
 				when: paymentperiod.ENDING,
 			},
-			want: -17.166666666666668,
+			want: decimal.NewFromFloat(-17.166666666666668),
 		},
 		{
 			name: "2period",
 			args: args{
-				rate: 0.0824 / 12,
+				rate: decimal.NewFromFloat(0.0824 / 12),
 				per:  2,
 				nper: 1 * 12,
 				pv:   2500,
 				fv:   0,
 				when: paymentperiod.ENDING,
 			},
-			want: -15.78933745735078,
+			want: decimal.NewFromFloat(-15.7944777777777785502222222222222225),
 		},
 		{
 			name: "3period",
 			args: args{
-				rate: 0.0824 / 12,
+				rate: decimal.NewFromFloat(0.0824 / 12),
 				per:  3,
 				nper: 1 * 12,
 				pv:   2500,
 				fv:   0,
 				when: paymentperiod.ENDING,
 			},
-			want: -14.402550587464265,
+			want: decimal.NewFromFloat(-14.4128665251851858466930407407407388909074074074074075),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IPmt(tt.args.rate, tt.args.per, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when); assertions.ShouldAlmostEqual(got, tt.want) != "" {
-				t.Errorf("ipmt() = %v, want %v", got, tt.want)
+			got := IPmt(tt.args.rate, tt.args.per, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when)
+			if err := isAlmostEqual(*got, tt.want, decimal.NewFromFloat(precision)); err != nil {
+				t.Errorf("error: %v, ipmt() = %v, want %v", err.Error(), got, tt.want)
 			}
 		})
 	}
 }
 
+//
 func Test_PPmt(t *testing.T) {
 	type args struct {
-		rate  float64
-		per   int64
-		nper  int64
-		pv    float64
-		fv    float64
-		when  paymentperiod.Type
-		round bool
+		rate decimal.Decimal
+		per  int64
+		nper int64
+		pv   int64
+		fv   int64
+		when paymentperiod.Type
 	}
+
 	tests := []struct {
 		name string
 		args args
-		want float64
+		want decimal.Decimal
 	}{
 		{
 			name: "period1",
 			args: args{
-				rate:  0.0824 / 12,
-				per:   1,
-				nper:  1 * 12,
-				pv:    2500,
-				fv:    0,
-				when:  paymentperiod.ENDING,
-				round: true,
+				rate: decimal.NewFromFloat(0.0824 / 12),
+				per:  1,
+				nper: 1 * 12,
+				pv:   2500,
+				fv:   0,
+				when: paymentperiod.ENDING,
 			},
-			want: -201,
+			want: decimal.NewFromFloat(-200.5819236867801753),
 		},
 		{
 			name: "period2",
 			args: args{
-				rate:  0.0824 / 12,
-				per:   2,
-				nper:  1 * 12,
-				pv:    2500,
-				fv:    0,
-				when:  paymentperiod.ENDING,
-				round: true,
+				rate: decimal.NewFromFloat(0.0824 / 12),
+				per:  2,
+				nper: 1 * 12,
+				pv:   2500,
+				fv:   0,
+				when: paymentperiod.ENDING,
 			},
-			want: -202,
+			want: decimal.NewFromFloat(-201.9541125756690642497777777777777775),
 		},
 		{
 			name: "period3",
 			args: args{
-				rate:  0.0824 / 12,
-				per:   3,
-				nper:  1 * 12,
-				pv:    2500,
-				fv:    0,
-				when:  paymentperiod.ENDING,
-				round: true,
+				rate: decimal.NewFromFloat(0.0824 / 12),
+				per:  3,
+				nper: 1 * 12,
+				pv:   2500,
+				fv:   0,
+				when: paymentperiod.ENDING,
 			},
-			want: -204,
+			want: decimal.NewFromFloat(-203.3357238282616569533069592592592611090925925925925925),
 		},
 		{
 			name: "period4",
 			args: args{
-				rate:  0.0824 / 12,
-				per:   4,
-				nper:  1 * 12,
-				pv:    2500,
-				fv:    0,
-				when:  paymentperiod.ENDING,
-				round: true,
+				rate: decimal.NewFromFloat(0.0824 / 12),
+				per:  4,
+				nper: 1 * 12,
+				pv:   2500,
+				fv:   0,
+				when: paymentperiod.ENDING,
 			},
-			want: -205,
+			want: decimal.NewFromFloat(-204.7268221447887186771256782740740724197917851851851849048641975308641975),
 		},
 		{
 			name: "period5",
 			args: args{
-				rate:  0.0824 / 12,
-				per:   5,
-				nper:  1 * 12,
-				pv:    2500,
-				fv:    0,
-				when:  paymentperiod.ENDING,
-				round: true,
+				rate: decimal.NewFromFloat(0.0824 / 12),
+				per:  5,
+				nper: 1 * 12,
+				pv:   2500,
+				fv:   0,
+				when: paymentperiod.ENDING,
 			},
-			want: -206,
+			want: decimal.NewFromFloat(-206.1274726697559329636068153181259077834584224469135796811415267489711932911213991769547325),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := PPmt(tt.args.rate, tt.args.per, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when, tt.args.round); assertions.ShouldAlmostEqual(got, tt.want) != "" {
-				t.Errorf("ppmt() = %v, want %v", got, tt.want)
+			got := PPmt(tt.args.rate, tt.args.per, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when)
+			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil {
+				t.Errorf("error:%v, ppmt() = %v, want %v", err.Error(), got, tt.want)
 			}
 		})
 	}
