@@ -161,7 +161,7 @@ func Pv(rate float64, nper int64, pmt float64, fv float64, when paymentperiod.Ty
 ```  
 Params:
 ```text
-fv	: a future value
+ fv	: a future value
  rate	: an interest rate compounded once per period
  nper	: total number of periods
  pmt	: a (fixed) payment, paid either
@@ -196,8 +196,8 @@ func main() {
 
 	pv := gofinancial.Pv(rate, nper, payment, fv, when)
 	fmt.Printf("pv:%v", math.Round(pv))	
-		// Output:
-		// pv:-10000
+	// Output:
+	// pv:-10000
 }
 ```
 [Run on go-playground](https://play.golang.org/p/hZhOLjkHdUF)
@@ -234,8 +234,8 @@ func main() {
 	values := []float64{-100, 39, 59, 55, 20}
 	npv := gofinancial.Npv(rate, values)
 	fmt.Printf("npv:%v", math.Round(npv))
-		// Output:
-		// npv: -0.008478591638455768
+	// Output:
+	// npv: -0.008478591638455768
 }
 ```
 [Run on go-playground](https://play.golang.org/p/cRORiLA1AQN)
