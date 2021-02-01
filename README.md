@@ -200,7 +200,7 @@ func main() {
 	// pv:-10000
 }
 ```
-[Run on go-playground](https://play.golang.org/p/hZhOLjkHdUF)
+[Run on go-playground](https://play.golang.org/p/xe1dXKxDEcY)
 
 
 ## Npv
@@ -238,7 +238,7 @@ func main() {
 	// npv: -0.008478591638455768
 }
 ```
-[Run on go-playground](https://play.golang.org/p/cRORiLA1AQN)
+[Run on go-playground](https://play.golang.org/p/ma1it8-rFzn)
 
 
 ##  Pmt  
