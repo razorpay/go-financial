@@ -209,7 +209,7 @@ Npv computes the Net Present Value of a cash flow series
 
 Params:
 
- rate	: a discount rate compounded once per period
+ rate	: a discount rate applied once per period
  values	: the value of the cash flow for that time period. Values provided here must be an array of float64
 
 References:
@@ -217,11 +217,11 @@ References:
 
 */
 func Npv(rate float64, values []float64) float64 {
-	internal_npv := float64(0.0)
-	current_rate_t := float64(1.0)
+	internalNpv := float64(0.0)
+	currentRateT := float64(1.0)
 	for _, current_val := range values {
-		internal_npv += (current_val / current_rate_t)
-		current_rate_t *= (1 + rate)
+		internalNpv += (current_val / currentRateT)
+		currentRateT *= (1 + rate)
 	}
-	return internal_npv
+	return internalNpv
 }
