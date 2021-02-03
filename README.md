@@ -13,18 +13,18 @@ Currently, only some functions are ported,
 which are as follows:  
   
   
-| numpy-financial function     | go native function ported?   |  
-|:------------------------:    |:------------------:  |  
-| fv                           |  ✅   |  
-| ipmt                         |  ✅   |  
-| pmt                          |  ✅   |  
-| ppmt                         |  ✅   |  
-| nper                         |      |  
-| pv                           |  ✅   |  
-| rate                         |      |  
-| irr                          |      |  
-| npv                          |  ✅   |  
-| mirr                         |      |  
+| numpy-financial function     | go native function ported?   | info|
+|:------------------------:    |:------------------:  | :------------------|
+| fv                           |  ✅   |   Computes the  future value|
+| ipmt                         |  ✅   |   Computes interest payment for a loan|
+| pmt                          |  ✅   |   Computes the fixed periodic payment(principal + interest) made against a loan amount|
+| ppmt                         |  ✅   |   Computes principal payment for a loan|
+| nper                         |      |    Computes the number of periodic payments|
+| pv                           |  ✅   |   Computes the present value of a payment|
+| rate                         |      |    Computes the rate of interest per period|
+| irr                          |      |    Computes the internal rate of return|
+| npv                          |  ✅   |   Computes the net present value of a series of cash flow|
+| mirr                         |      |    Computes the modified internal rate of return|
   
 # Index  
 While the numpy-financial package contains a set of elementary financial functions, this pkg also contains some helper functions on top of it. Their usage and description can be found below:  
