@@ -153,3 +153,29 @@ func ExamplePPmt_loan() {
 	// period:23 principal:-4846
 	// period:24 principal:-4918
 }
+
+// If an investment has a 6% p.a. rate of return, compounded annually, and you wish to possess ₹ 1,49,716 at the end of 10 peroids while providing ₹ 10,000 per period,
+// how much should you put as your initial deposit ?
+func ExamplePv() {
+	rate := 0.06
+	nper := int64(10)
+	payment := float64(-10000)
+	fv := float64(149716)
+	when := paymentperiod.ENDING
+
+	pv := gofinancial.Pv(rate, nper, payment, fv, when)
+	fmt.Printf("pv:%v", math.Round(pv))
+	// Output:
+	// pv:-10000
+}
+
+// Given a discount rate of 8% per period and initial deposit of 40000 followed by withdrawls of 5000, 8000, 12000 and 30000.
+// What is the net present value of the cash flow ?
+func ExampleNpv() {
+	rate := 0.08
+	values := []float64{-40000, 5000, 8000, 12000, 30000}
+	npv := gofinancial.Npv(rate, values)
+	fmt.Printf("npv:%v", math.Round(npv))
+	// Output:
+	// npv:3065
+}

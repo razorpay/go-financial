@@ -168,3 +168,60 @@ func Fv(rate float64, nper int64, pmt float64, pv float64, when paymentperiod.Ty
 	secondFactor := (1 + rate*when.Value()) * (factor - 1) / rate
 	return -pv*factor - pmt*secondFactor
 }
+
+/*
+Pv computes present value by solving the following equation:
+
+ fv +
+ pv*(1+rate)**nper +
+ pmt*(1 + rate*when)/rate*((1 + rate)**nper - 1) == 0
+
+
+Params:
+
+ fv	: a future value
+ rate	: an interest rate compounded once per period
+ nper	: total number of periods
+ pmt	: a (fixed) payment, paid either
+	  at the beginning (when =  1) or the end (when = 0) of each period
+ when	: specification of whether payment is made
+	  at the beginning (when = 1) or the end
+	  (when = 0) of each period
+
+References:
+	[WRW] Wheeler, D. A., E. Rathke, and R. Weir (Eds.) (2009, May).
+	Open Document Format for Office Applications (OpenDocument)v1.2,
+	Part 2: Recalculated Formula (OpenFormula) Format - Annotated Version,
+	Pre-Draft 12. Organization for the Advancement of Structured Information
+	Standards (OASIS). Billerica, MA, USA. [ODT Document].
+	Available:
+	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
+	OpenDocument-formula-20090508.odt
+*/
+func Pv(rate float64, nper int64, pmt float64, fv float64, when paymentperiod.Type) float64 {
+	factor := math.Pow(1.0+float64(rate), float64(nper))
+	secondFactor := (1 + rate*when.Value()) * (factor - 1) / rate
+	return (-fv - pmt*secondFactor) / factor
+}
+
+/*
+Npv computes the Net Present Value of a cash flow series
+
+Params:
+
+ rate	: a discount rate applied once per period
+ values	: the value of the cash flow for that time period. Values provided here must be an array of float64
+
+References:
+	L. J. Gitman, “Principles of Managerial Finance, Brief,” 3rd ed., Addison-Wesley, 2003, pg. 346.
+
+*/
+func Npv(rate float64, values []float64) float64 {
+	internalNpv := float64(0.0)
+	currentRateT := float64(1.0)
+	for _, current_val := range values {
+		internalNpv += (current_val / currentRateT)
+		currentRateT *= (1 + rate)
+	}
+	return internalNpv
+}
