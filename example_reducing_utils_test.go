@@ -169,13 +169,13 @@ func ExamplePv() {
 	// pv:-10000
 }
 
-// Given a rate of 0.281 per period and initial deposit of 100 followed by withdrawls of 39, 59, 55, 20.
+// Given a discount rate of 8% per period and initial deposit of 40000 followed by withdrawls of 5000, 8000, 12000 and 30000.
 // What is the net present value of the cash flow ?
 func ExampleNpv() {
-	rate := 0.281
-	values := []float64{-100, 39, 59, 55, 20}
+	rate := 0.08
+	values := []float64{-40000, 5000, 8000, 12000, 30000}
 	npv := gofinancial.Npv(rate, values)
 	fmt.Printf("npv:%v", math.Round(npv))
 	// Output:
-	// npv: -0.008478591638455768
+	// npv:3065
 }
