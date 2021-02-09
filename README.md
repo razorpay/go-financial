@@ -13,18 +13,18 @@ Currently, only some functions are ported,
 which are as follows:  
   
   
-| numpy-financial function     | go native function ported?   |  
-|:------------------------:    |:------------------:  |  
-| fv                           |  ✅   |  
-| ipmt                         |  ✅   |  
-| pmt                          |  ✅   |  
-| ppmt                         |  ✅   |  
-| nper                         |      |  
-| pv                           |      |  
-| rate                         |      |  
-| irr                          |      |  
-| npv                          |      |  
-| mirr                         |      |  
+| numpy-financial function     | go native function ported?   | info|
+|:------------------------:    |:------------------:  | :------------------|
+| fv                           |  ✅   |   Computes the  future value|
+| ipmt                         |  ✅   |   Computes interest payment for a loan|
+| pmt                          |  ✅   |   Computes the fixed periodic payment(principal + interest) made against a loan amount|
+| ppmt                         |  ✅   |   Computes principal payment for a loan|
+| nper                         |      |    Computes the number of periodic payments|
+| pv                           |  ✅   |   Computes the present value of a payment|
+| rate                         |      |    Computes the rate of interest per period|
+| irr                          |      |    Computes the internal rate of return|
+| npv                          |  ✅   |   Computes the net present value of a series of cash flow|
+| mirr                         |      |    Computes the modified internal rate of return|
   
 # Index  
 While the numpy-financial package contains a set of elementary financial functions, this pkg also contains some helper functions on top of it. Their usage and description can be found below:  
@@ -33,6 +33,10 @@ While the numpy-financial package contains a set of elementary financial functio
     + [Generated plot](#generated-plot)
   * [Fv(Future value)](#fv)
     + [Example(Fv)](#examplefv)
+  * [Pv(Present value)](#pv)
+	+ [Example(Pv)](#examplepv)
+  * [Npv(Net present value)](#npv)
+	+ [Example(Npv)](#examplenpv)
   * [Pmt(Payment)](#pmt)
     + [Example(Pmt-Loan)](#examplepmt-loan)
     + [Example(Pmt-Investment)](#examplepmt-investment)
@@ -148,6 +152,93 @@ func main() {
 }
 ```
 [Run on go-playground](https://play.golang.org/p/l2-5aCHTBmH)
+
+
+## Pv  
+
+```go  
+func Pv(rate float64, nper int64, pmt float64, fv float64, when paymentperiod.Type) float64 
+```  
+Params:
+```text
+ fv	: a future value
+ rate	: an interest rate compounded once per period
+ nper	: total number of periods
+ pmt	: a (fixed) payment, paid either
+	  at the beginning (when =  1) or the end (when = 0) of each period
+ when	: specification of whether payment is made
+	  at the beginning (when = 1) or the end
+	  (when = 0) of each period
+```
+
+Pv computes present value some periods(nper) before the future value.
+
+### Example(Pv)
+
+If an investment has a 6% p.a. rate of return, compounded annually, and you wish to possess ₹ 1,49,716 at the end of 10 peroids while providing ₹ 10,000 per period, how much should you put as your initial deposit ?
+
+```go
+package main
+
+import (
+	"fmt"
+	gofinancial "github.com/razorpay/go-financial"
+	"github.com/razorpay/go-financial/enums/paymentperiod"
+	"math"
+)
+
+func main() {
+	rate := 0.06
+	nper := int64(10)
+	payment := float64(-10000)
+	fv := float64(149716)
+	when := paymentperiod.ENDING
+
+	pv := gofinancial.Pv(rate, nper, payment, fv, when)
+	fmt.Printf("pv:%v", math.Round(pv))	
+	// Output:
+	// pv:-10000
+}
+```
+[Run on go-playground](https://play.golang.org/p/xe1dXKxDEcY)
+
+
+## Npv
+
+```go  
+func Npv(rate float64, values []float64) float64 
+```  
+Params:
+```text
+ rate	: a discount rate compounded once per period
+ values	: the value of the cash flow for that time period. Values provided here must be an array of float64
+```
+
+Npv computes net present value based on the discount rate and the values of cash flow over the course of the cash flow period
+
+### Example(Npv)
+
+Given a rate of 0.281 per period and initial deposit of 100 followed by withdrawls of 39, 59, 55, 20. What is the net present value of the cash flow ?
+
+```go
+package main
+
+import (
+	"fmt"
+	gofinancial "github.com/razorpay/go-financial"	
+	"math"
+)
+
+func main() {
+	rate := 0.281
+	values := []float64{-100, 39, 59, 55, 20}
+	npv := gofinancial.Npv(rate, values)
+	fmt.Printf("npv:%v", math.Round(npv))
+	// Output:
+	// npv: -0.008478591638455768
+}
+```
+[Run on go-playground](https://play.golang.org/p/ma1it8-rFzn)
 
 
 ##  Pmt  
