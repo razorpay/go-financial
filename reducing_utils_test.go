@@ -263,7 +263,7 @@ func Test_Pv(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := Pv(tt.args.rate, tt.args.nper, tt.args.pmt, tt.args.fv, tt.args.when)
 			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil {
-				t.Errorf("error:%v, pv() = %v, want %v",err, got, tt.want)
+				t.Errorf("error:%v, pv() = %v, want %v", err, got, tt.want)
 			}
 		})
 	}
@@ -282,7 +282,7 @@ func Test_Npv(t *testing.T) {
 		{
 			name: "success", args: args{
 				rate:   decimal.NewFromFloat(0.2),
-				values: []int64{-1000,100,100,100},
+				values: []int64{-1000, 100, 100, 100},
 			},
 			want: decimal.NewFromFloat(-789.3518518518518),
 		},
@@ -290,7 +290,7 @@ func Test_Npv(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := Npv(tt.args.rate, tt.args.values)
-			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil{
+			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil {
 				t.Errorf("npv() = %v, want %v", got, tt.want)
 			}
 		})
