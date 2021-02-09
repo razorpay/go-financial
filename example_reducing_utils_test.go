@@ -2,7 +2,6 @@ package gofinancial_test
 
 import (
 	"fmt"
-
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
 	"github.com/shopspring/decimal"
@@ -157,14 +156,14 @@ func ExamplePPmt_loan() {
 // If an investment has a 6% p.a. rate of return, compounded annually, and you wish to possess ₹ 1,49,716 at the end of 10 peroids while providing ₹ 10,000 per period,
 // how much should you put as your initial deposit ?
 func ExamplePv() {
-	rate := 0.06
+	rate := decimal.NewFromFloat(0.06)
 	nper := int64(10)
-	payment := float64(-10000)
-	fv := float64(149716)
+	payment := int64(-10000)
+	fv := int64(149716)
 	when := paymentperiod.ENDING
 
 	pv := gofinancial.Pv(rate, nper, payment, fv, when)
-	fmt.Printf("pv:%v", math.Round(pv))
+	fmt.Printf("pv:%v", pv.Round(0))
 	// Output:
 	// pv:-10000
 }
@@ -172,10 +171,10 @@ func ExamplePv() {
 // Given a discount rate of 8% per period and initial deposit of 40000 followed by withdrawls of 5000, 8000, 12000 and 30000.
 // What is the net present value of the cash flow ?
 func ExampleNpv() {
-	rate := 0.08
-	values := []float64{-40000, 5000, 8000, 12000, 30000}
+	rate := decimal.NewFromFloat(0.08)
+	values := []int64{-40000, 5000, 8000, 12000, 30000}
 	npv := gofinancial.Npv(rate, values)
-	fmt.Printf("npv:%v", math.Round(npv))
+	fmt.Printf("npv:%v", npv.Round(0))
 	// Output:
 	// npv:3065
 }

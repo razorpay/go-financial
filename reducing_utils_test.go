@@ -228,41 +228,42 @@ func Test_PPmt(t *testing.T) {
 
 func Test_Pv(t *testing.T) {
 	type args struct {
-		rate float64
+		rate decimal.Decimal
 		nper int64
-		pmt  float64
-		fv   float64
+		pmt  int64
+		fv   int64
 		when paymentperiod.Type
 	}
 	tests := []struct {
 		name string
 		args args
-		want float64
+		want decimal.Decimal
 	}{
 		{
 			name: "success", args: args{
-				rate: 0.24 / 12,
+				rate: decimal.NewFromFloat(0.24 / 12),
 				nper: 1 * 12,
 				pmt:  -300,
 				fv:   1000,
 				when: paymentperiod.BEGINNING,
 			},
-			want: 2447.561238019001,
+			want: decimal.NewFromFloat(2447.561238019001),
 		}, {
 			name: "success", args: args{
-				rate: 0.24 / 12,
+				rate: decimal.NewFromFloat(0.24 / 12),
 				nper: 1 * 12,
 				pmt:  -300,
 				fv:   1000,
 				when: paymentperiod.ENDING,
 			},
-			want: 2384.1091906934976,
+			want: decimal.NewFromFloat(2384.1091906934976),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Pv(tt.args.rate, tt.args.nper, tt.args.pmt, tt.args.fv, tt.args.when); got != tt.want {
-				t.Errorf("pv() = %v, want %v", got, tt.want)
+			got := Pv(tt.args.rate, tt.args.nper, tt.args.pmt, tt.args.fv, tt.args.when)
+			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil {
+				t.Errorf("error:%v, pv() = %v, want %v",err, got, tt.want)
 			}
 		})
 	}
@@ -270,25 +271,26 @@ func Test_Pv(t *testing.T) {
 
 func Test_Npv(t *testing.T) {
 	type args struct {
-		rate   float64
-		values []float64
+		rate   decimal.Decimal
+		values []int64
 	}
 	tests := []struct {
 		name string
 		args args
-		want float64
+		want decimal.Decimal
 	}{
 		{
 			name: "success", args: args{
-				rate:   0.2,
-				values: []float64{-1000.0, 100.0, 100.0, 100.0},
+				rate:   decimal.NewFromFloat(0.2),
+				values: []int64{-1000,100,100,100},
 			},
-			want: -789.3518518518518,
+			want: decimal.NewFromFloat(-789.3518518518518),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Npv(tt.args.rate, tt.args.values); got != tt.want {
+			got := Npv(tt.args.rate, tt.args.values)
+			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil{
 				t.Errorf("npv() = %v, want %v", got, tt.want)
 			}
 		})

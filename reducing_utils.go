@@ -216,10 +216,19 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func Pv(rate float64, nper int64, pmt float64, fv float64, when paymentperiod.Type) float64 {
-	factor := math.Pow(1.0+float64(rate), float64(nper))
-	secondFactor := (1 + rate*when.Value()) * (factor - 1) / rate
-	return (-fv - pmt*secondFactor) / factor
+func Pv(rate decimal.Decimal, nper int64, pmt int64, fv int64, when paymentperiod.Type) decimal.Decimal {
+	one := decimal.NewFromInt(1)
+	minusOne := decimal.NewFromInt(-1)
+	dNper := decimal.NewFromInt(nper)
+	dWhen := decimal.NewFromInt(when.Value())
+	dRateWithWhen := rate.Mul(dWhen)
+	dPmt := decimal.NewFromInt(pmt)
+	dFv := decimal.NewFromInt(fv)
+
+	factor := one.Add(rate).Pow(dNper)
+	secondFactor := factor.Sub(one).Mul(one.Add(dRateWithWhen)).Div(rate)
+
+	return dFv.Add(dPmt.Mul(secondFactor)).Div(factor).Mul(minusOne)
 }
 
 /*
@@ -234,12 +243,14 @@ References:
 	L. J. Gitman, “Principles of Managerial Finance, Brief,” 3rd ed., Addison-Wesley, 2003, pg. 346.
 
 */
-func Npv(rate float64, values []float64) float64 {
-	internalNpv := float64(0.0)
-	currentRateT := float64(1.0)
-	for _, current_val := range values {
-		internalNpv += (current_val / currentRateT)
-		currentRateT *= (1 + rate)
+func Npv(rate decimal.Decimal, values []int64) decimal.Decimal {
+	internalNpv := decimal.NewFromFloat(0.0)
+	currentRateT := decimal.NewFromFloat(1.0)
+	one := decimal.NewFromInt(1)
+	for _, currentVal := range values {
+		dCurrentVal := decimal.NewFromInt(currentVal)
+		internalNpv = internalNpv.Add(dCurrentVal.Div(currentRateT))
+		currentRateT = currentRateT.Mul(one.Add(rate))
 	}
 	return internalNpv
 }
