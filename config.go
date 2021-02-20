@@ -14,13 +14,25 @@ import (
 
 // Config is used to store details used in generation of amortization table.
 // TODO: update readme for RoundingPlaces and RoundingErr Tolerance
+//
+//  Fields:
+// 		StartDate		       :  starting day of the amortization schedule(inclusive)
+// 		EndDate		           :  ending day of the amortization schedule(inclusive)
+// 		Frequency		       :  frequency enum with DAILY, WEEKLY, MONTHLY or ANNUALLY
+// 		AmountBorrowed		   :  Amount Borrowed
+// 		InterestType		   :  InterType enum with FLAT or REDUCING value.
+// 		Interest		       :  Interest in basis points
+// 		PaymentPeriod		   :  Payment period enum to know whether payment made at the BEGINNING or ENDING of a period
+// 		EnableRounding		   :  If enabled, the final values in amortization schedule are rounded
+// 		RoundingPlaces		   :  If specified, the final values in amortization schedule are rounded to these many places
+// 		RoundingErrorTolerance :  Any difference in [payment-(principal+interest)] will be adjusted in interest component, upto the RoundingErrorTolerance value specified
 type Config struct {
 	StartDate              time.Time
 	EndDate                time.Time
 	Frequency              frequency.Type
-	AmountBorrowed         int64
+	AmountBorrowed         decimal.Decimal
 	InterestType           interesttype.Type
-	Interest               int64
+	Interest               decimal.Decimal
 	PaymentPeriod          paymentperiod.Type
 	EnableRounding         bool
 	RoundingPlaces         int32
@@ -32,7 +44,7 @@ type Config struct {
 
 func (c *Config) setTolerance() {
 	if c.RoundingErrorTolerance == 0 {
-		c.RoundingErrorTolerance = 10
+		c.RoundingErrorTolerance = 1
 	}
 }
 
@@ -47,8 +59,8 @@ func (c *Config) setPeriodsAndDates() error {
 	if err != nil {
 		return err
 	}
-	c.periods = int64(*period)
-	for i := 0; i < *period; i++ {
+	c.periods = int64(period)
+	for i := 0; i < period; i++ {
 		date, err := getStartDate(startDate, c.Frequency, i)
 		if err != nil {
 			return err
@@ -61,13 +73,13 @@ func (c *Config) setPeriodsAndDates() error {
 		if endDate, err := getEndDates(*date, c.Frequency); err != nil {
 			return err
 		} else {
-			c.endDates = append(c.endDates, *endDate)
+			c.endDates = append(c.endDates, endDate)
 		}
 	}
 	return nil
 }
 
-func GetPeriodDifference(from time.Time, to time.Time, freq frequency.Type) (*int, error) {
+func GetPeriodDifference(from time.Time, to time.Time, freq frequency.Type) (int, error) {
 	var periods int
 	switch freq {
 	case frequency.DAILY:
@@ -75,25 +87,25 @@ func GetPeriodDifference(from time.Time, to time.Time, freq frequency.Type) (*in
 	case frequency.WEEKLY:
 		days := int(to.Sub(from).Hours()/24) + 1
 		if days%7 != 0 {
-			return nil, ErrUnevenEndDate
+			return -1, ErrUnevenEndDate
 		}
 		periods = days / 7
 	case frequency.MONTHLY:
 		months, err := getMonthsBetweenDates(from, to)
 		if err != nil {
-			return nil, err
+			return -1, err
 		}
 		periods = *months
 	case frequency.ANNUALLY:
 		years, err := getYearsBetweenDates(from, to)
 		if err != nil {
-			return nil, err
+			return -1, err
 		}
 		periods = *years
 	default:
-		return nil, ErrInvalidFrequency
+		return -1, ErrInvalidFrequency
 	}
-	return &periods, nil
+	return periods, nil
 }
 
 func getStartDate(date time.Time, freq frequency.Type, index int) (*time.Time, error) {
@@ -139,7 +151,7 @@ func getYearsBetweenDates(start time.Time, end time.Time) (*int, error) {
 	return &count, nil
 }
 
-func getEndDates(date time.Time, freq frequency.Type) (*time.Time, error) {
+func getEndDates(date time.Time, freq frequency.Type) (time.Time, error) {
 	var nextDate time.Time
 	switch freq {
 	case frequency.DAILY:
@@ -154,15 +166,15 @@ func getEndDates(date time.Time, freq frequency.Type) (*time.Time, error) {
 		date = date.AddDate(1, 0, 0).AddDate(0, 0, -1)
 		nextDate = time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 0, date.Location())
 	default:
-		return nil, ErrInvalidFrequency
+		return time.Time{}, ErrInvalidFrequency
 	}
-	return &nextDate, nil
+	return nextDate, nil
 }
 
 func (c *Config) getInterestRatePerPeriodInDecimal() decimal.Decimal {
 	hundred := decimal.NewFromInt(100)
 	freq := decimal.NewFromInt(int64(c.Frequency.Value()))
-	interestInPercent := decimal.NewFromInt(c.Interest).Div(hundred)
+	interestInPercent := c.Interest.Div(hundred)
 	InterestInDecimal := interestInPercent.Div(hundred)
 	InterestPerPeriod := InterestInDecimal.Div(freq)
 	return InterestPerPeriod

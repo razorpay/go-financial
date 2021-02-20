@@ -37,13 +37,13 @@ func Test_amortization_GenerateTable(t *testing.T) {
 	}{
 		{
 			name:    "monthly table with rounding, reducing interest",
-			fields:  fields{Config: getConfigDto(frequency.MONTHLY, true, interesttype.REDUCING, 1000000, 2400, 0)},
+			fields:  fields{Config: getConfigDto(frequency.MONTHLY, true, interesttype.REDUCING, decimal.NewFromInt(1000000), decimal.NewFromInt(2400), 0)},
 			want:    getRowsWithRounding(t),
 			wantErr: false,
 		},
 		{
 			name:    "monthly table without rounding, reducing interest",
-			fields:  fields{Config: getConfigDto(frequency.MONTHLY, false, interesttype.REDUCING, 1000000, 2400, 0)},
+			fields:  fields{Config: getConfigDto(frequency.MONTHLY, false, interesttype.REDUCING, decimal.NewFromInt(1000000), decimal.NewFromInt(2400), 0)},
 			want:    getRowsWithoutRounding(t),
 			wantErr: false,
 		},
@@ -54,9 +54,9 @@ func Test_amortization_GenerateTable(t *testing.T) {
 					StartDate:      time.Date(2020, 4, 15, 0, 0, 0, 0, time.UTC),
 					EndDate:        time.Date(2020, 5, 14, 0, 0, 0, 0, time.UTC),
 					Frequency:      frequency.DAILY,
-					AmountBorrowed: 1000000,
+					AmountBorrowed: decimal.NewFromInt(1000000),
 					InterestType:   interesttype.FLAT,
-					Interest:       7300,
+					Interest:       decimal.NewFromInt(7300),
 					PaymentPeriod:  paymentperiod.ENDING,
 					EnableRounding: true,
 					RoundingPlaces: 0,
@@ -85,20 +85,20 @@ func Test_amortization_GenerateTable(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			if err := principalCheck(t, got, -tt.fields.Config.AmountBorrowed); err != nil {
+			if err := principalCheck(t, got, tt.fields.Config.AmountBorrowed); err != nil {
 				t.Fatal(err)
 			}
 		})
 	}
 }
 
-func principalCheck(t *testing.T, rows []Row, actualPrincipal int64) error {
+func principalCheck(t *testing.T, rows []Row, actualPrincipal decimal.Decimal) error {
 	expectedPrincipal := decimal.Zero
 	dPrecision := decimal.NewFromFloat(precision)
 	for _, row := range rows {
 		expectedPrincipal = expectedPrincipal.Add(row.Principal)
 	}
-	if err := isAlmostEqual(expectedPrincipal, decimal.NewFromInt(actualPrincipal), dPrecision); err != nil {
+	if err := isAlmostEqual(expectedPrincipal, actualPrincipal, dPrecision); err != nil {
 		return fmt.Errorf("error:%v, principalCheck failed. expected:%v, got:%v", err.Error(), expectedPrincipal, actualPrincipal)
 	}
 	return nil
@@ -128,7 +128,7 @@ func verifyRow(t *testing.T, actual Row, expected Row) error {
 }
 
 func isAlmostEqual(first decimal.Decimal, second decimal.Decimal, tolerance decimal.Decimal) error {
-	diff := first.Sub(second)
+	diff := first.Abs().Sub(second.Abs())
 	if diff.Abs().LessThanOrEqual(tolerance) {
 		return nil
 	} else {
@@ -168,29 +168,29 @@ func getRowsWithRounding(t *testing.T) []Row {
 func getRowsWithoutRounding(t *testing.T) []Row {
 	return []Row{
 		{Period: 1, StartDate: timeParseUtil(t, "2020-04-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-05-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-20000), Principal: decimal.NewFromFloat(-32871.0972532498902312)},
-		{Period: 2, StartDate: timeParseUtil(t, "2020-05-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-06-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-19342.58), Principal: decimal.NewFromFloat(-33528.5172532498902312)},
-		{Period: 3, StartDate: timeParseUtil(t, "2020-06-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-07-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-18672.0116), Principal: decimal.NewFromFloat(-34199.0856532498902312)},
-		{Period: 4, StartDate: timeParseUtil(t, "2020-07-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-08-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-17988.031832), Principal: decimal.NewFromFloat(-34883.0654212498902312)},
-		{Period: 5, StartDate: timeParseUtil(t, "2020-08-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-09-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-17290.37246864), Principal: decimal.NewFromFloat(-35580.7247846098902312)},
-		{Period: 6, StartDate: timeParseUtil(t, "2020-09-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-10-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-16578.7599180128), Principal: decimal.NewFromFloat(-36292.3373352370902312)},
-		{Period: 7, StartDate: timeParseUtil(t, "2020-10-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-11-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-15852.915116373056), Principal: decimal.NewFromFloat(-37018.1821368768342312)},
-		{Period: 8, StartDate: timeParseUtil(t, "2020-11-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-12-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-15112.55341870051712), Principal: decimal.NewFromFloat(-37758.5438345493731112)},
-		{Period: 9, StartDate: timeParseUtil(t, "2020-12-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-01-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-14357.3844870745274624), Principal: decimal.NewFromFloat(-38513.7127661753627688)},
-		{Period: 10, StartDate: timeParseUtil(t, "2021-01-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-02-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-13587.112176816018011648), Principal: decimal.NewFromFloat(-39283.985076433872219552)},
-		{Period: 11, StartDate: timeParseUtil(t, "2021-02-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-03-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-12801.43442035233838457), Principal: decimal.NewFromFloat(-40069.66283289755184663)},
-		{Period: 12, StartDate: timeParseUtil(t, "2021-03-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-04-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-12000.043108759385183984), Principal: decimal.NewFromFloat(-40871.054144490505047216)},
-		{Period: 13, StartDate: timeParseUtil(t, "2021-04-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-05-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-11182.62397093457285805592), Principal: decimal.NewFromFloat(-41688.47328231531737314408)},
-		{Period: 14, StartDate: timeParseUtil(t, "2021-05-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-06-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-10348.8564503532643342505984), Principal: decimal.NewFromFloat(-42522.2408028966258969494016)},
-		{Period: 15, StartDate: timeParseUtil(t, "2021-06-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-07-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-9498.413579360329540571690368), Principal: decimal.NewFromFloat(-43372.683673889560690628309632)},
-		{Period: 16, StartDate: timeParseUtil(t, "2021-07-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-08-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-8630.96185094753618425412417536), Principal: decimal.NewFromFloat(-44240.13540230235404694587582464)},
-		{Period: 17, StartDate: timeParseUtil(t, "2021-08-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-09-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-7746.1610879664868994798466588672), Principal: decimal.NewFromFloat(-45124.9361652834033317201533411328)},
-		{Period: 18, StartDate: timeParseUtil(t, "2021-09-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-10-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-6843.664309725816620550723592044544), Principal: decimal.NewFromFloat(-46027.432943524073610649276407955456)},
-		{Period: 19, StartDate: timeParseUtil(t, "2021-10-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-11-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-5923.11759592033298256949806388543488), Principal: decimal.NewFromFloat(-46947.97965732955724863050193611456512)},
-		{Period: 20, StartDate: timeParseUtil(t, "2021-11-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-12-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-4984.1599478387396591396080251631435776), Principal: decimal.NewFromFloat(-47886.9373054111505720603919748368564224)},
-		{Period: 21, StartDate: timeParseUtil(t, "2021-12-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2022-01-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-4026.423146795514424829480185666406449152), Principal: decimal.NewFromFloat(-48844.674106454375806370519814333593550848)},
-		{Period: 22, StartDate: timeParseUtil(t, "2022-01-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2022-02-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-3049.53160973142475773770978937973457813504), Principal: decimal.NewFromFloat(-49821.56564351846547346229021062026542186496)},
-		{Period: 23, StartDate: timeParseUtil(t, "2022-02-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2022-03-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-2053.1022419260531767582239851673292696977408), Principal: decimal.NewFromFloat(-50817.9950113238370544417760148326707303022592)},
-		{Period: 24, StartDate: timeParseUtil(t, "2022-03-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2022-04-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.721800245812584823171708404468609676476416), Interest: decimal.NewFromFloat(-1036.744286764574301623748464870675855091695616), Principal: decimal.NewFromFloat(-51834.9775134812382831994232435337927545847808)},
+		{Period: 2, StartDate: timeParseUtil(t, "2020-05-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-06-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-19342.578054935002195376), Principal: decimal.NewFromFloat(-33528.519198314888035824)},
+		{Period: 3, StartDate: timeParseUtil(t, "2020-06-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-07-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-18672.00767096870443465952), Principal: decimal.NewFromFloat(-34199.08958228118579654048)},
+		{Period: 4, StartDate: timeParseUtil(t, "2020-07-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-08-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-17988.0258793230807187287104), Principal: decimal.NewFromFloat(-34883.0713739268095124712896)},
+		{Period: 5, StartDate: timeParseUtil(t, "2020-08-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-09-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-17290.364451844544528479284608), Principal: decimal.NewFromFloat(-35580.732801405345702720715392)},
+		{Period: 6, StartDate: timeParseUtil(t, "2020-09-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-10-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-16578.74979581643761442487030016), Principal: decimal.NewFromFloat(-36292.34745743345261677512969984)},
+		{Period: 7, StartDate: timeParseUtil(t, "2020-10-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-11-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-15852.9028466677685620893677061632), Principal: decimal.NewFromFloat(-37018.1944065821216691106322938368)},
+		{Period: 8, StartDate: timeParseUtil(t, "2020-11-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2020-12-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-15112.538958536126128707155060286464), Principal: decimal.NewFromFloat(-37758.558294713764102492844939713536)},
+		{Period: 9, StartDate: timeParseUtil(t, "2020-12-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-01-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-14357.36779264185084665729816149219328), Principal: decimal.NewFromFloat(-38513.72946060803938454270183850780672)},
+		{Period: 10, StartDate: timeParseUtil(t, "2021-01-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-02-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-13587.0932034296900589664441247220371456), Principal: decimal.NewFromFloat(-39284.0040498202001722335558752779628544)},
+		{Period: 11, StartDate: timeParseUtil(t, "2021-02-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-03-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-12801.413122433286068210836347996451544), Principal: decimal.NewFromFloat(-40069.684130816604162989163652003548456)},
+		{Period: 12, StartDate: timeParseUtil(t, "2021-03-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-04-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-12000.0194398169540166737114269063147136), Principal: decimal.NewFromFloat(-40871.0778134329362145262885730936852864)},
+		{Period: 13, StartDate: timeParseUtil(t, "2021-04-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-05-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-11182.5978835482952627753711936245024784), Principal: decimal.NewFromFloat(-41688.4993697015949684246288063754975216)},
+		{Period: 14, StartDate: timeParseUtil(t, "2021-05-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-06-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-10348.8278961542633824404736286669530112), Principal: decimal.NewFromFloat(-42522.2693570956268487595263713330469888)},
+		{Period: 15, StartDate: timeParseUtil(t, "2021-06-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-07-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-9498.38250901235076510121527630045892), Principal: decimal.NewFromFloat(-43372.71474423753946609878472369954108)},
+		{Period: 16, StartDate: timeParseUtil(t, "2021-07-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-08-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-8630.9282141276000286503368350763583296), Principal: decimal.NewFromFloat(-44240.1690391222902025496631649236416704)},
+		{Period: 17, StartDate: timeParseUtil(t, "2021-08-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-09-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-7746.1248333451542161399680112579030592), Principal: decimal.NewFromFloat(-45124.9724199047360150600319887420969408)},
+		{Period: 18, StartDate: timeParseUtil(t, "2021-09-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-10-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-6843.6253849470594789200162504430962464), Principal: decimal.NewFromFloat(-46027.4718683028307522799837495569037536)},
+		{Period: 19, StartDate: timeParseUtil(t, "2021-10-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-11-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-5923.0759475810028934822310372718967008), Principal: decimal.NewFromFloat(-46948.0213056688873377177689627281032992)},
+		{Period: 20, StartDate: timeParseUtil(t, "2021-11-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2021-12-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-4984.1155214676251636466267790572995088), Principal: decimal.NewFromFloat(-47886.9817317822650675533732209427004912)},
+		{Period: 21, StartDate: timeParseUtil(t, "2021-12-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2022-01-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-4026.375886831979834802588742948502578752), Principal: decimal.NewFromFloat(-48844.721366417910396397411257051497421248)},
+		{Period: 22, StartDate: timeParseUtil(t, "2022-01-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2022-02-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-3049.48145950362167128636221053738042453504), Principal: decimal.NewFromFloat(-49821.61579374626855991363778946261957546496)},
+		{Period: 23, StartDate: timeParseUtil(t, "2022-02-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2022-03-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.0972532498902312), Interest: decimal.NewFromFloat(-2053.0491436286962239537094100682861000977408), Principal: decimal.NewFromFloat(-50818.0481096211940072462905899317138999022592)},
+		{Period: 24, StartDate: timeParseUtil(t, "2022-03-15 00:00:00 +0000 UTC"), EndDate: timeParseUtil(t, "2022-04-14 23:59:59 +0000 UTC"), Payment: decimal.NewFromFloat(-52871.097253249891181711353923018822531276476416), Interest: decimal.NewFromFloat(-1036.688181436272405139256412039524490291695616), Principal: decimal.NewFromFloat(-51834.4090718136187765720975109792980409847808)},
 	}
 }
 
@@ -237,7 +237,7 @@ func timeParseUtil(t *testing.T, input string) time.Time {
 	return resultTime
 }
 
-func getConfigDto(frequency frequency.Type, round bool, interestType interesttype.Type, amount int64, interest int64, places int32) *Config {
+func getConfigDto(frequency frequency.Type, round bool, interestType interesttype.Type, amount decimal.Decimal, interest decimal.Decimal, places int32) *Config {
 	return &Config{
 		StartDate:      time.Date(2020, 4, 15, 0, 0, 0, 0, time.UTC),
 		EndDate:        time.Date(2022, 4, 14, 0, 0, 0, 0, time.UTC),

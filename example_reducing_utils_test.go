@@ -13,8 +13,8 @@ import (
 func ExamplePmt_loan() {
 	rate := decimal.NewFromFloat(0.18 / 12)
 	nper := int64(12 * 2)
-	pv := int64(100000)
-	fv := int64(0)
+	pv := decimal.NewFromInt(100000)
+	fv := decimal.NewFromInt(0)
 	when := paymentperiod.ENDING
 	pmt := gofinancial.Pmt(rate, nper, pv, fv, when)
 	fmt.Printf("payment:%v", pmt.Round(0))
@@ -26,8 +26,8 @@ func ExamplePmt_loan() {
 func ExamplePmt_investment() {
 	rate := decimal.NewFromFloat(0.06)
 	nper := int64(10)
-	pv := int64(0)
-	fv := int64(1000000)
+	pv := decimal.NewFromInt(0)
+	fv := decimal.NewFromInt(1000000)
 	when := paymentperiod.BEGINNING
 	pmt := gofinancial.Pmt(rate, nper, pv, fv, when)
 	fmt.Printf("payment each year:%v", pmt.Round(0))
@@ -40,8 +40,8 @@ func ExamplePmt_investment() {
 func ExampleFv() {
 	rate := decimal.NewFromFloat(0.06)
 	nper := int64(10)
-	payment := int64(-10000)
-	pv := int64(-10000)
+	payment := decimal.NewFromInt(-10000)
+	pv := decimal.NewFromInt(-10000)
 	when := paymentperiod.ENDING
 
 	fv := gofinancial.Fv(rate, nper, payment, pv, when)
@@ -54,8 +54,8 @@ func ExampleFv() {
 func ExampleIPmt_loan() {
 	rate := decimal.NewFromFloat(0.18 / 12)
 	nper := int64(12 * 2)
-	pv := int64(100000)
-	fv := int64(0)
+	pv := decimal.NewFromInt(100000)
+	fv := decimal.NewFromInt(0)
 	when := paymentperiod.ENDING
 
 	for i := int64(0); i < nper; i++ {
@@ -85,7 +85,7 @@ func ExampleIPmt_loan() {
 	// period:20 interest:-358
 	// period:21 interest:-289
 	// period:22 interest:-218
-	// period:23 interest:-147
+	// period:23 interest:-146
 	// period:24 interest:-74
 }
 
@@ -94,8 +94,8 @@ func ExampleIPmt_loan() {
 func ExampleIPmt_investment() {
 	rate := decimal.NewFromFloat(0.06)
 	nper := int64(10)
-	pv := int64(0)
-	fv := int64(1000000)
+	pv := decimal.NewFromInt(0)
+	fv := decimal.NewFromInt(1000000)
 	when := paymentperiod.BEGINNING
 
 	for i := int64(1); i < nper+1; i++ {
@@ -109,18 +109,18 @@ func ExampleIPmt_investment() {
 	// period:4 interest earned:18786
 	// period:5 interest earned:24208
 	// period:6 interest earned:29955
-	// period:7 interest earned:36046
-	// period:8 interest earned:42503
+	// period:7 interest earned:36047
+	// period:8 interest earned:42504
 	// period:9 interest earned:49348
-	// period:10 interest earned:56603
+	// period:10 interest earned:56604
 }
 
 // If you have a loan of 1,00,000 to be paid after 2 years, with 18% p.a. compounded annually, how much total payment done each month will be principal ?
 func ExamplePPmt_loan() {
 	rate := decimal.NewFromFloat(0.18 / 12)
 	nper := int64(12 * 2)
-	pv := int64(100000)
-	fv := int64(0)
+	pv := decimal.NewFromInt(100000)
+	fv := decimal.NewFromInt(0)
 	when := paymentperiod.ENDING
 
 	for i := int64(0); i < nper; i++ {
@@ -151,7 +151,7 @@ func ExamplePPmt_loan() {
 	// period:21 principal:-4704
 	// period:22 principal:-4774
 	// period:23 principal:-4846
-	// period:24 principal:-4918
+	// period:24 principal:-4919
 }
 
 // If an investment has a 6% p.a. rate of return, compounded annually, and you wish to possess ₹ 1,49,716 at the end of 10 peroids while providing ₹ 10,000 per period,
@@ -159,8 +159,8 @@ func ExamplePPmt_loan() {
 func ExamplePv() {
 	rate := decimal.NewFromFloat(0.06)
 	nper := int64(10)
-	payment := int64(-10000)
-	fv := int64(149716)
+	payment := decimal.NewFromInt(-10000)
+	fv := decimal.NewFromInt(149716)
 	when := paymentperiod.ENDING
 
 	pv := gofinancial.Pv(rate, nper, payment, fv, when)
@@ -173,7 +173,7 @@ func ExamplePv() {
 // What is the net present value of the cash flow ?
 func ExampleNpv() {
 	rate := decimal.NewFromFloat(0.08)
-	values := []int64{-40000, 5000, 8000, 12000, 30000}
+	values := []decimal.Decimal{decimal.NewFromInt(-40000), decimal.NewFromInt(5000), decimal.NewFromInt(8000), decimal.NewFromInt(12000), decimal.NewFromInt(30000)}
 	npv := gofinancial.Npv(rate, values)
 	fmt.Printf("npv:%v", npv.Round(0))
 	// Output:

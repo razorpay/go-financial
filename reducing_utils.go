@@ -45,19 +45,17 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func Pmt(rate decimal.Decimal, nper int64, pv int64, fv int64, when paymentperiod.Type) decimal.Decimal {
+func Pmt(rate decimal.Decimal, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
 	one := decimal.NewFromInt(1)
 	minusOne := decimal.NewFromInt(-1)
-	dNper := decimal.NewFromInt(nper)
 	dWhen := decimal.NewFromInt(when.Value())
+	dNper := decimal.NewFromInt(nper)
 	dRateWithWhen := rate.Mul(dWhen)
-	dPv := decimal.NewFromInt(pv)
-	dFv := decimal.NewFromInt(fv)
 
 	factor := one.Add(rate).Pow(dNper)
 	secondFactor := factor.Sub(one).Mul(one.Add(dRateWithWhen)).Div(rate)
 
-	return dPv.Mul(factor).Add(dFv).Div(secondFactor).Mul(minusOne)
+	return pv.Mul(factor).Add(fv).Div(secondFactor).Mul(minusOne)
 }
 
 /*
@@ -84,11 +82,11 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func IPmt(rate decimal.Decimal, per int64, nper int64, pv int64, fv int64, when paymentperiod.Type) *decimal.Decimal {
+func IPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) *decimal.Decimal {
 	// TODO: update nan and remove any rounding here.
 	totalPmt := Pmt(rate, nper, pv, fv, when)
 	one := decimal.NewFromInt(1)
-	ipmt := rbl(rate, per, totalPmt.IntPart(), pv, when).Mul(rate)
+	ipmt := rbl(rate, per, totalPmt, pv, when).Mul(rate)
 	if when == paymentperiod.BEGINNING {
 		if per < 1 {
 			return nil
@@ -132,15 +130,15 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func PPmt(rate decimal.Decimal, per int64, nper int64, pv int64, fv int64, when paymentperiod.Type) decimal.Decimal {
+func PPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
 	total := Pmt(rate, nper, pv, fv, when)
 	ipmt := IPmt(rate, per, nper, pv, fv, when)
 	return total.Sub(*ipmt)
 }
 
 // Rbl computes remaining balance
-func rbl(rate decimal.Decimal, per int64, pmt int64, pv int64, when paymentperiod.Type) decimal.Decimal {
-	return Fv(rate, (per - 1), pmt, pv, when)
+func rbl(rate decimal.Decimal, per int64, pmt decimal.Decimal, pv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
+	return Fv(rate, per-1, pmt, pv, when)
 }
 
 /*
@@ -172,19 +170,17 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func Fv(rate decimal.Decimal, nper int64, pmt int64, pv int64, when paymentperiod.Type) decimal.Decimal {
+func Fv(rate decimal.Decimal, nper int64, pmt decimal.Decimal, pv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
 	one := decimal.NewFromInt(1)
 	minusOne := decimal.NewFromInt(-1)
-	dNper := decimal.NewFromInt(nper)
-	dPmt := decimal.NewFromInt(pmt)
-	dPv := decimal.NewFromInt(pv)
 	dWhen := decimal.NewFromInt(when.Value())
 	dRateWithWhen := rate.Mul(dWhen)
+	dNper := decimal.NewFromInt(nper)
 
 	factor := one.Add(rate).Pow(dNper)
 	secondFactor := factor.Sub(one).Mul(one.Add(dRateWithWhen)).Div(rate)
 
-	return dPv.Mul(factor).Add(dPmt.Mul(secondFactor)).Mul(minusOne)
+	return pv.Mul(factor).Add(pmt.Mul(secondFactor)).Mul(minusOne)
 }
 
 /*
@@ -216,19 +212,17 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func Pv(rate decimal.Decimal, nper int64, pmt int64, fv int64, when paymentperiod.Type) decimal.Decimal {
+func Pv(rate decimal.Decimal, nper int64, pmt decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
 	one := decimal.NewFromInt(1)
 	minusOne := decimal.NewFromInt(-1)
-	dNper := decimal.NewFromInt(nper)
 	dWhen := decimal.NewFromInt(when.Value())
+	dNper := decimal.NewFromInt(nper)
 	dRateWithWhen := rate.Mul(dWhen)
-	dPmt := decimal.NewFromInt(pmt)
-	dFv := decimal.NewFromInt(fv)
 
 	factor := one.Add(rate).Pow(dNper)
 	secondFactor := factor.Sub(one).Mul(one.Add(dRateWithWhen)).Div(rate)
 
-	return dFv.Add(dPmt.Mul(secondFactor)).Div(factor).Mul(minusOne)
+	return fv.Add(pmt.Mul(secondFactor)).Div(factor).Mul(minusOne)
 }
 
 /*
@@ -243,13 +237,12 @@ References:
 	L. J. Gitman, “Principles of Managerial Finance, Brief,” 3rd ed., Addison-Wesley, 2003, pg. 346.
 
 */
-func Npv(rate decimal.Decimal, values []int64) decimal.Decimal {
+func Npv(rate decimal.Decimal, values []decimal.Decimal) decimal.Decimal {
 	internalNpv := decimal.NewFromFloat(0.0)
 	currentRateT := decimal.NewFromFloat(1.0)
 	one := decimal.NewFromInt(1)
 	for _, currentVal := range values {
-		dCurrentVal := decimal.NewFromInt(currentVal)
-		internalNpv = internalNpv.Add(dCurrentVal.Div(currentRateT))
+		internalNpv = internalNpv.Add(currentVal.Div(currentRateT))
 		currentRateT = currentRateT.Mul(one.Add(rate))
 	}
 	return internalNpv

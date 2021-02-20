@@ -76,37 +76,25 @@ func (a Amortization) GenerateTable() ([]Row, error) {
 			return nil, err
 		}
 		result = append(result, row)
-
 	}
 	return result, nil
 }
 
 // PerformErrorCorrectionDueToRounding takes care of errors in principal and payment amount due to rounding.
 // Only the final row is adjusted for rounding errors.
-func PerformErrorCorrectionDueToRounding(finalRow *Row, rows []Row, principal int64, round bool, places int32) {
+func PerformErrorCorrectionDueToRounding(finalRow *Row, rows []Row, principal decimal.Decimal, round bool, places int32) {
 	principalCollected := finalRow.Principal
-	dPrincipal := decimal.NewFromInt(principal)
 	for _, row := range rows {
 		principalCollected = principalCollected.Add(row.Principal)
 	}
-	diff := dPrincipal.Abs().Sub(principalCollected.Abs())
+	diff := principal.Abs().Sub(principalCollected.Abs())
 	if round {
-		if diff.GreaterThan(decimal.Zero) {
-			// subtracting diff coz payment, principal and interest are -ve.
-			finalRow.Payment = finalRow.Payment.Sub(diff).Round(places)
-			finalRow.Principal = finalRow.Principal.Sub(diff).Round(places)
-		} else if diff.LessThan(decimal.Zero) {
-			finalRow.Payment = finalRow.Payment.Add(diff).Round(places)
-			finalRow.Principal = finalRow.Principal.Add(diff).Round(places)
-		}
+		// subtracting diff coz payment, principal and interest are -ve.
+		finalRow.Payment = finalRow.Payment.Sub(diff).Round(places)
+		finalRow.Principal = finalRow.Principal.Sub(diff).Round(places)
 	} else {
-		if diff.GreaterThan(decimal.Zero) {
-			finalRow.Payment = finalRow.Payment.Sub(diff)
-			finalRow.Principal = finalRow.Principal.Sub(diff)
-		} else {
-			finalRow.Payment = finalRow.Payment.Add(diff)
-			finalRow.Principal = finalRow.Principal.Add(diff)
-		}
+		finalRow.Payment = finalRow.Payment.Sub(diff)
+		finalRow.Principal = finalRow.Principal.Sub(diff)
 	}
 }
 
@@ -116,7 +104,6 @@ func PerformErrorCorrectionDueToRounding(finalRow *Row, rows []Row, principal in
 // the difference is adjusted against the interest.
 func sanityCheckUpdate(row *Row, tolerance int64) error {
 	if !row.Payment.Equal(row.Principal.Add(row.Interest)) {
-
 		diff := row.Payment.Abs().Sub(row.Principal.Add(row.Interest).Abs())
 		if diff.LessThanOrEqual(decimal.NewFromInt(tolerance)) {
 			row.Interest = row.Interest.Sub(diff)
