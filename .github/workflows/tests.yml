@@ -8,7 +8,7 @@ jobs:
     name: Cancel Previous Runs
     if: always()
     steps:
-      - uses: styfle/cancel-workflow-action@d57d93c
+      - uses: styfle/cancel-workflow-action@d57d93c3a8110b00c3a2c0b64b8516013c9fd4c9
         if: github.ref != 'refs/heads/master'
         name: cancel old workflows
         id: cancel
