@@ -135,6 +135,34 @@ func rbl(rate float64, per int64, pmt float64, pv float64, when paymentperiod.Ty
 }
 
 /*
+Nper computes the number of periodic payments by solving the equation:
+
+ fv +
+ pv*(1 + rate)**nper +
+ pmt*(1 + rate*when)/rate*((1 + rate)**nper - 1) = 0
+
+
+Params:
+
+ rate	: an interest rate compounded once per period
+ pmt	: a (fixed) payment, paid either
+	  at the beginning (when =  1) or the end (when = 0) of each period
+ pv	: a present value
+ when	: specification of whether payment is made
+	  at the beginning (when = 1) or the end
+	  (when = 0) of each period
+ fv: a future value
+ when	: specification of whether payment is made
+	  at the beginning (when = 1) or the end
+	  (when = 0) of each period
+
+*/
+func Nper(rate float64, pmt float64, pv float64, fv float64, when paymentperiod.Type) float64 {
+	z := pmt * (1 + rate*when.Value()) / rate
+	return math.Log((-fv+z)/(pv+z)) / math.Log(1+rate)
+}
+
+/*
 Fv computes future value at the end of some periods(nper) by solving the following equation:
 
  fv +

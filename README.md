@@ -19,7 +19,7 @@ which are as follows:
 | ipmt                         |  ✅   |   Computes interest payment for a loan|
 | pmt                          |  ✅   |   Computes the fixed periodic payment(principal + interest) made against a loan amount|
 | ppmt                         |  ✅   |   Computes principal payment for a loan|
-| nper                         |      |    Computes the number of periodic payments|
+| nper                         |  ✅   |    Computes the number of periodic payments|
 | pv                           |  ✅   |   Computes the present value of a payment|
 | rate                         |      |    Computes the rate of interest per period|
 | irr                          |      |    Computes the internal rate of return|
@@ -45,6 +45,8 @@ While the numpy-financial package contains a set of elementary financial functio
     + [Example(IPmt-Investment)](#exampleipmt-investment)
   * [PPmt(Principal Payment)](#ppmt)
     + [Example(PPmt-Loan)](#exampleppmt-loan)
+	* [Nper(Number of payments)](#nper)
+    + [Example(Nper-Loan)](#examplenper-loan)
 
  Detailed documentation is available at [godoc](https://godoc.org/github.com/razorpay/go-financial).
 ## Amortisation(Generate Table)  
@@ -498,3 +500,54 @@ func main() {
 }
 ```
 [Run on go-playground](https://play.golang.org/p/bZuHcvmzUSK)
+
+
+
+
+## Nper  
+  
+```go  
+func Nper(rate float64, pmt float64, pv float64, fv float64, when paymentperiod.Type) float64 
+```  
+Params:  
+```text
+rate  : an interest rate compounded once per period
+pmt   : a (fixed) payment, paid either at the beginning (when =  1)
+        or the end (when = 0) of each period
+pv   : a present value
+fv  : a future value
+when  : specification of whether payment is made at the beginning (when = 1)
+        or the end (when = 0) of each period  
+``` 
+
+Nper computes the number of periodic payments.
+
+### Example(Nper)
+
+If a loan has a 6% annual interest, compounded monthly, and you only have $200/month to pay towards the loan, how long would it take to pay-off the loan of $5,000?
+
+```go
+package main
+
+import (
+	"fmt"
+	"math"
+
+	gofinancial "github.com/razorpay/go-financial"
+	"github.com/razorpay/go-financial/enums/paymentperiod"
+)
+
+func main() {
+	rate := 0.06 / 12
+	fv := float64(0)
+	payment := float64(-200)
+	pv := float64(5000)
+	when := paymentperiod.ENDING
+
+	nper := gofinancial.Nper(rate, payment, pv, fv, when)
+	fmt.Printf("nper:%v", math.Ceil(nper))
+	// Output:
+	// nper:27
+}
+```
+
