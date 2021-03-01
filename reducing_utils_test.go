@@ -132,7 +132,7 @@ func Test_IPmt(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := IPmt(tt.args.rate, tt.args.per, tt.args.nper, tt.args.pv, tt.args.fv, tt.args.when)
-			if err := isAlmostEqual(*got, tt.want, decimal.NewFromFloat(precision)); err != nil {
+			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil {
 				t.Errorf("error: %v, ipmt() = %v, want %v", err.Error(), got, tt.want)
 			}
 		})

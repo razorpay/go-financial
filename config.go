@@ -14,37 +14,25 @@ import (
 
 // Config is used to store details used in generation of amortization table.
 // TODO: update readme for RoundingPlaces and RoundingErr Tolerance
-//
-//  Fields:
-// 		StartDate		       :  starting day of the amortization schedule(inclusive)
-// 		EndDate		           :  ending day of the amortization schedule(inclusive)
-// 		Frequency		       :  frequency enum with DAILY, WEEKLY, MONTHLY or ANNUALLY
-// 		AmountBorrowed		   :  Amount Borrowed
-// 		InterestType		   :  InterType enum with FLAT or REDUCING value.
-// 		Interest		       :  Interest in basis points
-// 		PaymentPeriod		   :  Payment period enum to know whether payment made at the BEGINNING or ENDING of a period
-// 		EnableRounding		   :  If enabled, the final values in amortization schedule are rounded
-// 		RoundingPlaces		   :  If specified, the final values in amortization schedule are rounded to these many places
-// 		RoundingErrorTolerance :  Any difference in [payment-(principal+interest)] will be adjusted in interest component, upto the RoundingErrorTolerance value specified
 type Config struct {
-	StartDate              time.Time
-	EndDate                time.Time
-	Frequency              frequency.Type
-	AmountBorrowed         decimal.Decimal
-	InterestType           interesttype.Type
-	Interest               decimal.Decimal
-	PaymentPeriod          paymentperiod.Type
-	EnableRounding         bool
-	RoundingPlaces         int32
-	RoundingErrorTolerance int64
-	periods                int64       // derived
-	startDates             []time.Time // derived
-	endDates               []time.Time // derived
+	StartDate              time.Time          // Starting day of the amortization schedule(inclusive)
+	EndDate                time.Time          // Ending day of the amortization schedule(inclusive)
+	Frequency              frequency.Type     // Frequency enum with DAILY, WEEKLY, MONTHLY or ANNUALLY
+	AmountBorrowed         decimal.Decimal    // Amount Borrowed
+	InterestType           interesttype.Type  // InterestType enum with FLAT or REDUCING value.
+	Interest               decimal.Decimal    // Interest in basis points
+	PaymentPeriod          paymentperiod.Type // Payment period enum to know whether payment made at the BEGINNING or ENDING of a period
+	EnableRounding         bool               // If enabled, the final values in amortization schedule are rounded
+	RoundingPlaces         int32              // If specified, the final values in amortization schedule are rounded to these many places
+	RoundingErrorTolerance int64              // Any difference in [payment-(principal+interest)] will be adjusted in interest component, upto the RoundingErrorTolerance value specified
+	periods                int64              // derived
+	startDates             []time.Time        // derived
+	endDates               []time.Time        // derived
 }
 
 func (c *Config) setTolerance() {
 	if c.RoundingErrorTolerance == 0 {
-		c.RoundingErrorTolerance = 1
+		c.RoundingErrorTolerance = 0
 	}
 }
 
@@ -68,9 +56,9 @@ func (c *Config) setPeriodsAndDates() error {
 		if i == 0 {
 			c.startDates = append(c.startDates, c.StartDate)
 		} else {
-			c.startDates = append(c.startDates, *date)
+			c.startDates = append(c.startDates, date)
 		}
-		if endDate, err := getEndDates(*date, c.Frequency); err != nil {
+		if endDate, err := getEndDates(date, c.Frequency); err != nil {
 			return err
 		} else {
 			c.endDates = append(c.endDates, endDate)
@@ -108,7 +96,7 @@ func GetPeriodDifference(from time.Time, to time.Time, freq frequency.Type) (int
 	return periods, nil
 }
 
-func getStartDate(date time.Time, freq frequency.Type, index int) (*time.Time, error) {
+func getStartDate(date time.Time, freq frequency.Type, index int) (time.Time, error) {
 	var startDate time.Time
 	switch freq {
 	case frequency.DAILY:
@@ -120,9 +108,9 @@ func getStartDate(date time.Time, freq frequency.Type, index int) (*time.Time, e
 	case frequency.ANNUALLY:
 		startDate = date.AddDate(index, 0, 0)
 	default:
-		return nil, ErrInvalidFrequency
+		return time.Time{}, ErrInvalidFrequency
 	}
-	return &startDate, nil
+	return startDate, nil
 }
 
 func getMonthsBetweenDates(start time.Time, end time.Time) (*int, error) {

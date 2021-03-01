@@ -12,6 +12,8 @@ package gofinancial
 // TODO: update readme
 
 import (
+	"math"
+
 	"github.com/razorpay/go-financial/enums/paymentperiod"
 	"github.com/shopspring/decimal"
 )
@@ -82,26 +84,25 @@ References:
 	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
 	OpenDocument-formula-20090508.odt
 */
-func IPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) *decimal.Decimal {
+func IPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
 	// TODO: update nan and remove any rounding here.
 	totalPmt := Pmt(rate, nper, pv, fv, when)
 	one := decimal.NewFromInt(1)
 	ipmt := rbl(rate, per, totalPmt, pv, when).Mul(rate)
 	if when == paymentperiod.BEGINNING {
 		if per < 1 {
-			return nil
+			return decimal.NewFromFloat(math.NaN())
 		} else if per == 1 {
-			return &decimal.Zero
+			return decimal.NewFromFloat(math.NaN())
 		} else {
 			// paying at the beginning, so discount it.
-			val := ipmt.Div(one.Add(rate))
-			return &val
+			return ipmt.Div(one.Add(rate))
 		}
 	} else {
 		if per < 1 {
-			return nil
+			return decimal.NewFromFloat(math.NaN())
 		} else {
-			return &ipmt
+			return ipmt
 		}
 	}
 }
@@ -133,7 +134,7 @@ References:
 func PPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
 	total := Pmt(rate, nper, pv, fv, when)
 	ipmt := IPmt(rate, per, nper, pv, fv, when)
-	return total.Sub(*ipmt)
+	return total.Sub(ipmt)
 }
 
 // Rbl computes remaining balance

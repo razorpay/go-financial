@@ -70,7 +70,7 @@ func (a Amortization) GenerateTable() ([]Row, error) {
 			row.Interest = interestPayment
 		}
 		if i == a.Config.periods {
-			PerformErrorCorrectionDueToRounding(&row, result, a.Config.AmountBorrowed, a.Config.EnableRounding, a.Config.RoundingPlaces)
+			DoPrincipalAdjustmentDueToRounding(&row, result, a.Config.AmountBorrowed, a.Config.EnableRounding, a.Config.RoundingPlaces)
 		}
 		if err := sanityCheckUpdate(&row, a.Config.RoundingErrorTolerance); err != nil {
 			return nil, err
@@ -80,9 +80,9 @@ func (a Amortization) GenerateTable() ([]Row, error) {
 	return result, nil
 }
 
-// PerformErrorCorrectionDueToRounding takes care of errors in principal and payment amount due to rounding.
-// Only the final row is adjusted for rounding errors.
-func PerformErrorCorrectionDueToRounding(finalRow *Row, rows []Row, principal decimal.Decimal, round bool, places int32) {
+// DoPrincipalAdjustmentDueToRounding takes care of errors in total principal to be collected and adjusts it against the
+// the final principal and payment amount.
+func DoPrincipalAdjustmentDueToRounding(finalRow *Row, rows []Row, principal decimal.Decimal, round bool, places int32) {
 	principalCollected := finalRow.Principal
 	for _, row := range rows {
 		principalCollected = principalCollected.Add(row.Principal)
