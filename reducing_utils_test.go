@@ -304,3 +304,36 @@ func Test_Npv(t *testing.T) {
 		})
 	}
 }
+
+func Test_Nper(t *testing.T) {
+	type args struct {
+		rate float64
+		fv   float64
+		pmt  float64
+		pv   float64
+		when paymentperiod.Type
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "success", args: args{
+				rate: 0.07 / 12,
+				fv:   0,
+				pmt:  -150,
+				pv:   8000,
+				when: paymentperiod.ENDING,
+			},
+			want: 64.07334877066185,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Nper(tt.args.rate, tt.args.pmt, tt.args.pv, tt.args.fv, tt.args.when); got != tt.want {
+				t.Errorf("fv() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

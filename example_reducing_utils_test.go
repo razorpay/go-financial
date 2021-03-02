@@ -179,3 +179,18 @@ func ExampleNpv() {
 	// Output:
 	// npv:3065
 }
+
+// If a loan has a 6% annual interest, compounded monthly, and you only have $200/month to pay towards the loan,
+// how long would it take to pay-off the loan of $5,000?
+func ExampleNper() {
+	rate := 0.06 / 12
+	fv := float64(0)
+	payment := float64(-200)
+	pv := float64(5000)
+	when := paymentperiod.ENDING
+
+	nper := gofinancial.Nper(rate, payment, pv, fv, when)
+	fmt.Printf("nper:%v", math.Ceil(nper))
+	// Output:
+	// nper:27
+}
