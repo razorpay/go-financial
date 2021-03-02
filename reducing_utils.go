@@ -52,7 +52,6 @@ func Pmt(rate float64, nper int64, pv float64, fv float64, when paymentperiod.Ty
 	} else {
 		secondFactor = (factor - 1) * (1 + rate*when.Value()) / rate
 	}
-	// secondFactor := (factor - 1) * (1 + rate*when.Value()) / rate
 	return -(pv*factor + fv) / secondFactor
 }
 
