@@ -36,6 +36,9 @@ func Test_Pmt(t *testing.T) {
 		{
 			"8% p.a., monthly basis, 5 yrs", args{0.08 / 12, 12 * 5, 15000, 0, 0}, -304.1459143262052370338701494,
 		},
+		{
+			"0%p.a. , monthly basis, 15 yrs", args{0, 15 * 12, 200000, 0, paymentperiod.ENDING}, -1111.111111111111,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
