@@ -511,13 +511,13 @@ func Nper(rate float64, pmt float64, pv float64, fv float64, when paymentperiod.
 ```  
 Params:  
 ```text
-rate  : an interest rate compounded once per period
-pmt   : a (fixed) payment, paid either at the beginning (when =  1)
-        or the end (when = 0) of each period
-pv   : a present value
-fv  : a future value
-when  : specification of whether payment is made at the beginning (when = 1)
-        or the end (when = 0) of each period  
+rate   : an interest rate compounded once per period
+pmt    : a (fixed) payment, paid either at the beginning (when =  1)
+         or the end (when = 0) of each period
+pv     : a present value
+fv     : a future value
+when   : specification of whether payment is made at the beginning (when = 1)
+         or the end (when = 0) of each period  
 ``` 
 
 Nper computes the number of periodic payments.
