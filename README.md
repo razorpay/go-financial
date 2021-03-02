@@ -522,9 +522,9 @@ when   : specification of whether payment is made at the beginning (when = 1)
 
 Nper computes the number of periodic payments.
 
-### Example(Nper)
+### Example(Nper-Loan)
 
-If a loan has a 6% annual interest, compounded monthly, and you only have $200/month to pay towards the loan, how long would it take to pay-off the loan of $5,000?
+If a loan has a 6% annual interest, compounded monthly, and you only have \$200/month to pay towards the loan, how long would it take to pay-off the loan of \$5,000?
 
 ```go
 package main
@@ -550,4 +550,4 @@ func main() {
 	// nper:27
 }
 ```
-
+[Run on go-playground](https://play.golang.org/p/5LIuZiRcbMy)
