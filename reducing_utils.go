@@ -46,7 +46,12 @@ References:
 */
 func Pmt(rate float64, nper int64, pv float64, fv float64, when paymentperiod.Type) float64 {
 	factor := math.Pow(1.0+float64(rate), float64(nper))
-	secondFactor := (factor - 1) * (1 + rate*when.Value()) / rate
+	var secondFactor float64
+	if rate == 0 {
+		secondFactor = float64(nper)
+	} else {
+		secondFactor = (factor - 1) * (1 + rate*when.Value()) / rate
+	}
 	return -(pv*factor + fv) / secondFactor
 }
 
@@ -132,6 +137,34 @@ func PPmt(rate float64, per int64, nper int64, pv float64, fv float64, when paym
 // Rbl computes remaining balance
 func rbl(rate float64, per int64, pmt float64, pv float64, when paymentperiod.Type) float64 {
 	return Fv(rate, (per - 1), pmt, pv, when)
+}
+
+/*
+Nper computes the number of periodic payments by solving the equation:
+
+ fv +
+ pv*(1 + rate)**nper +
+ pmt*(1 + rate*when)/rate*((1 + rate)**nper - 1) = 0
+
+
+Params:
+
+ rate	: an interest rate compounded once per period
+ pmt	: a (fixed) payment, paid either
+	  at the beginning (when =  1) or the end (when = 0) of each period
+ pv	: a present value
+ when	: specification of whether payment is made
+	  at the beginning (when = 1) or the end
+	  (when = 0) of each period
+ fv: a future value
+ when	: specification of whether payment is made
+	  at the beginning (when = 1) or the end
+	  (when = 0) of each period
+
+*/
+func Nper(rate float64, pmt float64, pv float64, fv float64, when paymentperiod.Type) float64 {
+	z := pmt * (1 + rate*when.Value()) / rate
+	return math.Log((-fv+z)/(pv+z)) / math.Log(1+rate)
 }
 
 /*

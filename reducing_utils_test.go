@@ -36,6 +36,9 @@ func Test_Pmt(t *testing.T) {
 		{
 			"8% p.a., monthly basis, 5 yrs", args{0.08 / 12, 12 * 5, 15000, 0, 0}, -304.1459143262052370338701494,
 		},
+		{
+			"0%p.a. , monthly basis, 15 yrs", args{0, 15 * 12, 200000, 0, paymentperiod.ENDING}, -1111.111111111111,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -297,6 +300,39 @@ func Test_Npv(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := Npv(tt.args.rate, tt.args.values); got != tt.want {
 				t.Errorf("npv() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_Nper(t *testing.T) {
+	type args struct {
+		rate float64
+		fv   float64
+		pmt  float64
+		pv   float64
+		when paymentperiod.Type
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			name: "success", args: args{
+				rate: 0.07 / 12,
+				fv:   0,
+				pmt:  -150,
+				pv:   8000,
+				when: paymentperiod.ENDING,
+			},
+			want: 64.07334877066185,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Nper(tt.args.rate, tt.args.pmt, tt.args.pv, tt.args.fv, tt.args.when); got != tt.want {
+				t.Errorf("fv() = %v, want %v", got, tt.want)
 			}
 		})
 	}
