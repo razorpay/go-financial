@@ -13,7 +13,6 @@ import (
 )
 
 // Config is used to store details used in generation of amortization table.
-// TODO: update readme for RoundingPlaces and RoundingErr Tolerance
 type Config struct {
 	StartDate              time.Time          // Starting day of the amortization schedule(inclusive)
 	EndDate                time.Time          // Ending day of the amortization schedule(inclusive)

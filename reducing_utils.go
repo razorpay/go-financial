@@ -9,8 +9,6 @@ Currently, only some functions are ported, the remaining will be ported soon.
 */
 package gofinancial
 
-// TODO: update readme
-
 import (
 	"math"
 
@@ -89,26 +87,20 @@ References:
 	OpenDocument-formula-20090508.odt
 */
 func IPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
-	// TODO: update nan and remove any rounding here.
 	totalPmt := Pmt(rate, nper, pv, fv, when)
 	one := decimal.NewFromInt(1)
 	ipmt := rbl(rate, per, totalPmt, pv, when).Mul(rate)
 	if when == paymentperiod.BEGINNING {
-		if per < 1 {
-			return decimal.NewFromFloat(math.NaN())
-		} else if per == 1 {
-			return decimal.NewFromFloat(math.NaN())
+		if per == 1 {
+			return decimal.Zero
 		} else {
 			// paying at the beginning, so discount it.
 			return ipmt.Div(one.Add(rate))
 		}
 	} else {
-		if per < 1 {
-			return decimal.NewFromFloat(math.NaN())
-		} else {
-			return ipmt
-		}
+		return ipmt
 	}
+
 }
 
 /*
@@ -144,6 +136,52 @@ func PPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv de
 // Rbl computes remaining balance
 func rbl(rate decimal.Decimal, per int64, pmt decimal.Decimal, pv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
 	return Fv(rate, per-1, pmt, pv, when)
+}
+
+/*
+Nper computes the number of periodic payments by solving the equation:
+
+ fv +
+ pv*(1 + rate)**nper +
+ pmt*(1 + rate*when)/rate*((1 + rate)**nper - 1) = 0
+
+
+Params:
+
+ rate	: an interest rate compounded once per period
+ pmt	: a (fixed) payment, paid either
+	  at the beginning (when =  1) or the end (when = 0) of each period
+ pv	: a present value
+ when	: specification of whether payment is made
+	  at the beginning (when = 1) or the end
+	  (when = 0) of each period
+ fv: a future value
+ when	: specification of whether payment is made
+	  at the beginning (when = 1) or the end
+	  (when = 0) of each period
+
+*/
+func Nper(rate decimal.Decimal, pmt decimal.Decimal, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) (result decimal.Decimal, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			result = decimal.Zero
+			err = ErrOutOfBounds
+		}
+	}()
+	one := decimal.NewFromInt(1)
+	minusOne := decimal.NewFromInt(-1)
+	dWhen := decimal.NewFromInt(when.Value())
+	dRateWithWhen := rate.Mul(dWhen)
+	z := pmt.Mul(one.Add(dRateWithWhen)).Div(rate)
+	numerator := minusOne.Mul(fv).Add(z).Div(pv.Add(z))
+	denominator := one.Add(rate)
+	floatNumerator, _ := numerator.BigFloat().Float64()
+	floatDenominator, _ := denominator.BigFloat().Float64()
+	logNumerator := math.Log(floatNumerator)
+	logDenominator := math.Log(floatDenominator)
+	dlogDenominator := decimal.NewFromFloat(logDenominator)
+	result = decimal.NewFromFloat(logNumerator).Div(dlogDenominator)
+	return result, nil
 }
 
 /*

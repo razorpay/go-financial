@@ -14,7 +14,7 @@ func (f *Flat) GetPrincipal(config Config, _ int64) decimal.Decimal {
 }
 
 // GetInterest returns interest amount contribution in a given period towards a loan, depending on config.
-func (f *Flat) GetInterest(config Config, _ int64) decimal.Decimal {
+func (f *Flat) GetInterest(config Config, period int64) decimal.Decimal {
 	minusOne := decimal.NewFromInt(-1)
 	return config.getInterestRatePerPeriodInDecimal().Mul(config.AmountBorrowed).Mul(minusOne)
 }

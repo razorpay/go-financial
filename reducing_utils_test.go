@@ -1,6 +1,7 @@
 package gofinancial
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/shopspring/decimal"
@@ -295,6 +296,61 @@ func Test_Npv(t *testing.T) {
 			got := Npv(tt.args.rate, tt.args.values)
 			if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil {
 				t.Errorf("npv() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_Nper(t *testing.T) {
+	type args struct {
+		rate decimal.Decimal
+		fv   decimal.Decimal
+		pmt  decimal.Decimal
+		pv   decimal.Decimal
+		when paymentperiod.Type
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    decimal.Decimal
+		wantErr bool
+		err     error
+	}{
+		{
+			name: "success", args: args{
+				rate: decimal.NewFromFloat(0.07 / 12),
+				fv:   decimal.NewFromInt(0),
+				pmt:  decimal.NewFromInt(-150),
+				pv:   decimal.NewFromInt(8000),
+				when: paymentperiod.ENDING,
+			},
+			want:    decimal.NewFromFloat(64.0733487706618586),
+			wantErr: false,
+			err:     nil,
+		},
+		{
+			name: "failure", args: args{
+				rate: decimal.NewFromFloat(1e100),
+				fv:   decimal.NewFromInt(0),
+				pmt:  decimal.NewFromInt(-150),
+				pv:   decimal.NewFromInt(8000),
+				when: paymentperiod.ENDING,
+			},
+			want:    decimal.NewFromFloat(64.0733487706618586),
+			wantErr: true,
+			err:     ErrOutOfBounds,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, err := Nper(tt.args.rate, tt.args.pmt, tt.args.pv, tt.args.fv, tt.args.when); err != nil {
+				if !tt.wantErr && errors.Is(err, tt.err) {
+					t.Errorf("error is not equal, want=%v, got=%v", tt.err, err)
+				}
+			} else {
+				if err := isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)); err != nil {
+					t.Errorf("fv() = %v, want %v", got, tt.want)
+				}
 			}
 		})
 	}

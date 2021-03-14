@@ -59,8 +59,8 @@ func ExampleIPmt_loan() {
 	when := paymentperiod.ENDING
 
 	for i := int64(0); i < nper; i++ {
-		pmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
-		fmt.Printf("period:%d interest:%v\n", i+1, pmt.Round(0))
+		ipmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d interest:%v\n", i+1, ipmt.Round(0))
 	}
 	// Output:
 	// period:1 interest:-1500
@@ -99,8 +99,8 @@ func ExampleIPmt_investment() {
 	when := paymentperiod.BEGINNING
 
 	for i := int64(1); i < nper+1; i++ {
-		pmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
-		fmt.Printf("period:%d interest earned:%v\n", i, pmt.Round(0))
+		ipmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d interest earned:%v\n", i, ipmt.Round(0))
 	}
 	// Output:
 	// period:1 interest earned:4294
@@ -124,8 +124,8 @@ func ExamplePPmt_loan() {
 	when := paymentperiod.ENDING
 
 	for i := int64(0); i < nper; i++ {
-		pmt := gofinancial.PPmt(rate, i+1, nper, pv, fv, when)
-		fmt.Printf("period:%d principal:%v\n", i+1, pmt.Round(0))
+		ppmt := gofinancial.PPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d principal:%v\n", i+1, ppmt.Round(0))
 	}
 	// Output:
 	// period:1 principal:-3492
@@ -178,4 +178,19 @@ func ExampleNpv() {
 	fmt.Printf("npv:%v", npv.Round(0))
 	// Output:
 	// npv:3065
+}
+
+// If a loan has a 6% annual interest, compounded monthly, and you only have $200/month to pay towards the loan,
+// how long would it take to pay-off the loan of $5,000?
+func ExampleNper() {
+	rate := decimal.NewFromFloat(0.06 / 12)
+	fv := decimal.Zero
+	payment := decimal.NewFromInt(-200)
+	pv := decimal.NewFromInt(5000)
+	when := paymentperiod.ENDING
+
+	nper, _ := gofinancial.Nper(rate, payment, pv, fv, when)
+	fmt.Printf("nper:%v", nper.Ceil())
+	// Output:
+	// nper:27
 }

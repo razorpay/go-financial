@@ -19,7 +19,7 @@ which are as follows:
 | ipmt                         |  ✅   |   Computes interest payment for a loan|
 | pmt                          |  ✅   |   Computes the fixed periodic payment(principal + interest) made against a loan amount|
 | ppmt                         |  ✅   |   Computes principal payment for a loan|
-| nper                         |      |    Computes the number of periodic payments|
+| nper                         |  ✅   |    Computes the number of periodic payments|
 | pv                           |  ✅   |   Computes the present value of a payment|
 | rate                         |      |    Computes the rate of interest per period|
 | irr                          |      |    Computes the internal rate of return|
@@ -45,6 +45,8 @@ While the numpy-financial package contains a set of elementary financial functio
     + [Example(IPmt-Investment)](#exampleipmt-investment)
   * [PPmt(Principal Payment)](#ppmt)
     + [Example(PPmt-Loan)](#exampleppmt-loan)
+	* [Nper(Number of payments)](#nper)
+    + [Example(Nper-Loan)](#examplenper-loan)
 
  Detailed documentation is available at [godoc](https://godoc.org/github.com/razorpay/go-financial).
 ## Amortisation(Generate Table)  
@@ -375,8 +377,8 @@ func main() {
 	when := paymentperiod.ENDING
 
 	for i := int64(0); i < nper; i++ {
-		pmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
-		fmt.Printf("period:%d interest:%v\n", i+1, pmt.Round(0))
+		ipmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d interest:%v\n", i+1, ipmt.Round(0))
 	}
 	// Output:
 	// period:1 interest:-1500
@@ -429,8 +431,8 @@ func main() {
 	when := paymentperiod.BEGINNING
 
 	for i := int64(1); i < nper+1; i++ {
-		pmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
-		fmt.Printf("period:%d interest earned:%v\n", i, pmt.Round(0))
+		ipmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d interest earned:%v\n", i, ipmt.Round(0))
 	}
 	// Output:
 	// period:1 interest earned:4294
@@ -485,8 +487,8 @@ func main() {
 	when := paymentperiod.ENDING
 
 	for i := int64(0); i < nper; i++ {
-		pmt := gofinancial.PPmt(rate, i+1, nper, pv, fv, when)
-		fmt.Printf("period:%d principal:%v\n", i+1, pmt.Round(0))
+		ppmt := gofinancial.PPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d principal:%v\n", i+1, ppmt.Round(0))
 	}
 	// Output:
 	// period:1 principal:-3492
@@ -516,3 +518,58 @@ func main() {
 }
 ```
 [Run on go-playground](https://play.golang.org/p/s5nkkIeEj3x)
+
+
+
+
+## Nper  
+  
+```go  
+func Nper(rate float64, pmt float64, pv float64, fv float64, when paymentperiod.Type) float64 
+```  
+Params:  
+```text
+rate   : an interest rate compounded once per period
+pmt    : a (fixed) payment, paid either at the beginning (when =  1)
+         or the end (when = 0) of each period
+pv     : a present value
+fv     : a future value
+when   : specification of whether payment is made at the beginning (when = 1)
+         or the end (when = 0) of each period  
+``` 
+
+Nper computes the number of periodic payments.
+
+### Example(Nper-Loan)
+
+If a loan has a 6% annual interest, compounded monthly, and you only have \$200/month to pay towards the loan, how long would it take to pay-off the loan of \$5,000?
+
+```go
+package main
+
+import (
+	"fmt"
+
+	gofinancial "github.com/razorpay/go-financial"
+	"github.com/razorpay/go-financial/enums/paymentperiod"
+	"github.com/shopspring/decimal"
+)
+
+
+func main() {
+	rate := decimal.NewFromFloat(0.06 / 12)
+	fv := decimal.NewFromFloat(0)
+	payment := decimal.NewFromFloat(-200)
+	pv := decimal.NewFromFloat(5000)
+	when := paymentperiod.ENDING
+
+	nper,err := gofinancial.Nper(rate, payment, pv, fv, when)
+	if err != nil{
+		fmt.Printf("error:%v\n", err)
+	}
+	fmt.Printf("nper:%v",nper.Ceil())
+	// Output:
+	// nper:27
+}
+```
+[Run on go-playground](https://play.golang.org/p/hm77MTPBGYg)
