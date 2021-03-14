@@ -56,9 +56,9 @@ func Pmt(rate decimal.Decimal, nper int64, pv decimal.Decimal, fv decimal.Decima
 
 	factor := one.Add(rate).Pow(dNper)
 	var secondFactor decimal.Decimal
-	if rate.Equal(decimal.Zero){
+	if rate.Equal(decimal.Zero) {
 		secondFactor = dNper
-	}else {
+	} else {
 		secondFactor = factor.Sub(one).Mul(one.Add(dRateWithWhen)).Div(rate)
 	}
 	return pv.Mul(factor).Add(fv).Div(secondFactor).Mul(minusOne)
