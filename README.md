@@ -127,7 +127,7 @@ func main() {
 ## Fv  
   
 ```go  
-func Fv(rate float64, nper int64, pmt float64, pv float64, when paymentperiod.Type) float64  
+func Fv(rate decimal.Decimal, nper int64, pmt decimal.Decimal, pv decimal.Decimal, when paymentperiod.Type) decimal.Decimal 
 ```  
 Params:  
 ```text
@@ -176,7 +176,7 @@ func main() {
 ## Pv  
 
 ```go  
-func Pv(rate float64, nper int64, pmt float64, fv float64, when paymentperiod.Type) float64 
+func Pv(rate decimal.Decimal, nper int64, pmt decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal 
 ```  
 Params:
 ```text
@@ -226,7 +226,7 @@ func main() {
 ## Npv
 
 ```go  
-func Npv(rate float64, values []float64) float64 
+func Npv(rate decimal.Decimal, values []decimal.Decimal) decimal.Decimal 
 ```  
 Params:
 ```text
@@ -264,7 +264,7 @@ func main() {
 ##  Pmt  
   
 ```go  
-func Pmt(rate float64, nper int64, pv float64, fv float64, when paymentperiod.Type) float64  
+func Pmt(rate decimal.Decimal, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal
 ```  
 Params:  
  ```text
@@ -341,7 +341,7 @@ func main() {
 ##  IPmt  
   
 ```go  
-func IPmt(rate float64, per int64, nper int64, pv float64, fv float64, when paymentperiod.Type) float64  
+func IPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal   
 ```  
 IPmt computes interest payment for a loan under a given period.  
   
@@ -452,7 +452,7 @@ func main() {
 ## PPmt  
   
 ```go  
-func PPmt(rate float64, per int64, nper int64, pv float64, fv float64, when paymentperiod.Type, round bool) float64  
+func PPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal   
 ```  
 PPmt computes principal payment for a loan under a given period.  
   
@@ -525,7 +525,7 @@ func main() {
 ## Nper  
   
 ```go  
-func Nper(rate float64, pmt float64, pv float64, fv float64, when paymentperiod.Type) float64 
+func Nper(rate decimal.Decimal, pmt decimal.Decimal, pv decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) (result decimal.Decimal, err error)  
 ```  
 Params:  
 ```text
