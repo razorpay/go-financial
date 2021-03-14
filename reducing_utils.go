@@ -100,7 +100,6 @@ func IPmt(rate decimal.Decimal, per int64, nper int64, pv decimal.Decimal, fv de
 	} else {
 		return ipmt
 	}
-
 }
 
 /*
