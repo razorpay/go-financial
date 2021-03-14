@@ -164,7 +164,7 @@ func Nper(rate decimal.Decimal, pmt decimal.Decimal, pv decimal.Decimal, fv deci
 	defer func() {
 		if r := recover(); r != nil {
 			result = decimal.Zero
-			err = ErrOutOfBounds
+			err = fmt.Errorf("%w: %v", ErrOutOfBounds, r)
 		}
 	}()
 	one := decimal.NewFromInt(1)
