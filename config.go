@@ -24,16 +24,10 @@ type Config struct {
 	PaymentPeriod          paymentperiod.Type // Payment period enum to know whether payment made at the BEGINNING or ENDING of a period
 	EnableRounding         bool               // If enabled, the final values in amortization schedule are rounded
 	RoundingPlaces         int32              // If specified, the final values in amortization schedule are rounded to these many places
-	RoundingErrorTolerance int64              // Any difference in [payment-(principal+interest)] will be adjusted in interest component, upto the RoundingErrorTolerance value specified
+	RoundingErrorTolerance decimal.Decimal    // Any difference in [payment-(principal+interest)] will be adjusted in interest component, upto the RoundingErrorTolerance value specified
 	periods                int64              // derived
 	startDates             []time.Time        // derived
 	endDates               []time.Time        // derived
-}
-
-func (c *Config) setTolerance() {
-	if c.RoundingErrorTolerance == 0 {
-		c.RoundingErrorTolerance = 0
-	}
 }
 
 func (c *Config) setPeriodsAndDates() error {

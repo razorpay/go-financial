@@ -33,6 +33,9 @@ func Test_Pmt(t *testing.T) {
 		{
 			"8% p.a., monthly basis, 5 yrs", args{decimal.NewFromFloat(0.08 / 12), 12 * 5, decimal.NewFromInt(15000), decimal.NewFromInt(0), 0}, decimal.NewFromFloat(-304.1459143262052370338701494),
 		},
+		{
+			"0%p.a. , monthly basis, 15 yrs", args{decimal.Zero, 15 * 12, decimal.NewFromInt(200000), decimal.Zero, paymentperiod.ENDING}, decimal.NewFromFloat(-1111.111111111111),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -27,7 +27,6 @@ func NewAmortization(c *Config) (*Amortization, error) {
 	if err := a.Config.setPeriodsAndDates(); err != nil {
 		return nil, err
 	}
-	a.Config.setTolerance()
 	switch a.Config.InterestType {
 	case interesttype.REDUCING:
 		a.Financial = &Reducing{}
@@ -102,10 +101,10 @@ func DoPrincipalAdjustmentDueToRounding(finalRow *Row, rows []Row, principal dec
 // payment = principal + interest for every row.
 // If there is a mismatch due to rounding error and it is withing the tolerance,
 // the difference is adjusted against the interest.
-func sanityCheckUpdate(row *Row, tolerance int64) error {
+func sanityCheckUpdate(row *Row, tolerance decimal.Decimal) error {
 	if !row.Payment.Equal(row.Principal.Add(row.Interest)) {
 		diff := row.Payment.Abs().Sub(row.Principal.Add(row.Interest).Abs())
-		if diff.LessThanOrEqual(decimal.NewFromInt(tolerance)) {
+		if diff.LessThanOrEqual(tolerance) {
 			row.Interest = row.Interest.Sub(diff)
 		} else {
 			return ErrPayment

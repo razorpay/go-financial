@@ -17,7 +17,7 @@ func ExampleAmortization_GenerateTable() {
 	if err != nil {
 		panic("location loading error")
 	}
-	currentDate := time.Date(2009, 11, 11, 0o4, 30, 0o0, 0, loc)
+	currentDate := time.Date(2009, 11, 11, 4, 30, 0, 0, loc)
 	config := gofinancial.Config{
 
 		// start date is inclusive
@@ -41,6 +41,12 @@ func ExampleAmortization_GenerateTable() {
 
 		// all values will be rounded
 		EnableRounding: true,
+
+		// it will be rounded to nearest int
+		RoundingPlaces: 0,
+
+		// no error is tolerated
+		RoundingErrorTolerance: decimal.Zero,
 	}
 	amortization, err := gofinancial.NewAmortization(&config)
 	if err != nil {
