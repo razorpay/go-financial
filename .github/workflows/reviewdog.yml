@@ -41,4 +41,4 @@ jobs:
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          reviewdog -diff='git diff master' -conf=.reviewdog.yml -reporter=github-pr-review -runners=golangci -fail-on-error -level=info -filter-mode=nofilter -tee
+          reviewdog -diff='git diff master' -conf=.reviewdog.yml -reporter=github-pr-review -runners=golangci -fail-on-error -level=info
