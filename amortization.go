@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"path"
 	"time"
+
+	"github.com/shopspring/decimal"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -26,7 +27,6 @@ func NewAmortization(c *Config) (*Amortization, error) {
 	if err := a.Config.setPeriodsAndDates(); err != nil {
 		return nil, err
 	}
-
 	switch a.Config.InterestType {
 	case interesttype.REDUCING:
 		a.Financial = &Reducing{}
@@ -41,9 +41,9 @@ type Row struct {
 	Period    int64
 	StartDate time.Time
 	EndDate   time.Time
-	Payment   float64
-	Interest  float64
-	Principal float64
+	Payment   decimal.Decimal
+	Interest  decimal.Decimal
+	Principal decimal.Decimal
 }
 
 // GenerateTable constructs the amortization table based on the configuration.
@@ -58,54 +58,59 @@ func (a Amortization) GenerateTable() ([]Row, error) {
 		payment := a.Financial.GetPayment(*a.Config)
 		principalPayment := a.Financial.GetPrincipal(*a.Config, i)
 		interestPayment := a.Financial.GetInterest(*a.Config, i)
-		if a.Config.Round {
-			row.Payment = math.Round(payment)
-			row.Principal = math.Round(principalPayment)
-			row.Interest = math.Round(interestPayment)
+		if a.Config.EnableRounding {
+			row.Payment = payment.Round(a.Config.RoundingPlaces)
+			row.Principal = principalPayment.Round(a.Config.RoundingPlaces)
+			// to avoid rounding errors.
+			row.Interest = row.Payment.Sub(row.Principal)
 		} else {
 			row.Payment = payment
 			row.Principal = principalPayment
 			row.Interest = interestPayment
 		}
 		if i == a.Config.periods {
-			PerformErrorCorrectionDueToRounding(&row, result, a.Config.AmountBorrowed, a.Config.Round)
+			DoPrincipalAdjustmentDueToRounding(&row, result, a.Config.AmountBorrowed, a.Config.EnableRounding, a.Config.RoundingPlaces)
 		}
-		if row.Payment != row.Principal+row.Interest {
-			return nil, ErrPayment
+		if err := sanityCheckUpdate(&row, a.Config.RoundingErrorTolerance); err != nil {
+			return nil, err
 		}
 		result = append(result, row)
-
 	}
 	return result, nil
 }
 
-// PerformErrorCorrectionDueToRounding takes care of errors in principal and payment amount due to rounding.
-// Only the final row is adjusted for rounding errors.
-func PerformErrorCorrectionDueToRounding(finalRow *Row, rows []Row, principal int64, round bool) {
+// DoPrincipalAdjustmentDueToRounding takes care of errors in total principal to be collected and adjusts it against the
+// the final principal and payment amount.
+func DoPrincipalAdjustmentDueToRounding(finalRow *Row, rows []Row, principal decimal.Decimal, round bool, places int32) {
 	principalCollected := finalRow.Principal
 	for _, row := range rows {
-		principalCollected += row.Principal
+		principalCollected = principalCollected.Add(row.Principal)
 	}
+	diff := principal.Abs().Sub(principalCollected.Abs())
 	if round {
-		diff := math.Abs(float64(principal)) - math.Abs(principalCollected)
-		if diff > 0 {
-			// subtracting diff coz payment, principal and interest are -ve.
-			finalRow.Payment = math.Round(finalRow.Payment - diff)
-			finalRow.Principal = math.Round(finalRow.Principal - diff)
-		} else if diff < 0 {
-			finalRow.Payment = math.Round(finalRow.Payment + diff)
-			finalRow.Principal = math.Round(finalRow.Principal + diff)
-		}
+		// subtracting diff coz payment, principal and interest are -ve.
+		finalRow.Payment = finalRow.Payment.Sub(diff).Round(places)
+		finalRow.Principal = finalRow.Principal.Sub(diff).Round(places)
 	} else {
-		diff := math.Abs(float64(principal)) - math.Abs(principalCollected)
-		if diff > 0 {
-			finalRow.Payment = finalRow.Payment - diff
-			finalRow.Principal = finalRow.Principal - diff
+		finalRow.Payment = finalRow.Payment.Sub(diff)
+		finalRow.Principal = finalRow.Principal.Sub(diff)
+	}
+}
+
+// sanityCheckUpdate verifies the equation,
+// payment = principal + interest for every row.
+// If there is a mismatch due to rounding error and it is withing the tolerance,
+// the difference is adjusted against the interest.
+func sanityCheckUpdate(row *Row, tolerance decimal.Decimal) error {
+	if !row.Payment.Equal(row.Principal.Add(row.Interest)) {
+		diff := row.Payment.Abs().Sub(row.Principal.Add(row.Interest).Abs())
+		if diff.LessThanOrEqual(tolerance) {
+			row.Interest = row.Interest.Sub(diff)
 		} else {
-			finalRow.Payment = finalRow.Payment + diff
-			finalRow.Principal = finalRow.Principal + diff
+			return ErrPayment
 		}
 	}
+	return nil
 }
 
 // PrintRows outputs a formatted json for given rows as input.
@@ -164,11 +169,12 @@ func getStackedBarPlot(rows []Row) *charts.Bar {
 	var interestArr []opts.BarData
 	var principalArr []opts.BarData
 	var paymentArr []opts.BarData
+	minusOne := decimal.NewFromInt(-1)
 	for _, row := range rows {
 		xAxis = append(xAxis, row.EndDate.Format("2006-01-02"))
-		interestArr = append(interestArr, opts.BarData{Name: fmt.Sprintf("%v", -row.Interest), Value: -row.Interest})
-		principalArr = append(principalArr, opts.BarData{Value: -row.Principal})
-		paymentArr = append(paymentArr, opts.BarData{Value: -row.Payment})
+		interestArr = append(interestArr, opts.BarData{Value: row.Interest.Mul(minusOne).String()})
+		principalArr = append(principalArr, opts.BarData{Value: row.Principal.Mul(minusOne).String()})
+		paymentArr = append(paymentArr, opts.BarData{Value: row.Payment.Mul(minusOne).String()})
 	}
 	// Put data into instance
 	bar.SetXAxis(xAxis).

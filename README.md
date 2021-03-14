@@ -60,6 +60,8 @@ package main
 import (
 	"time"
 
+	"github.com/shopspring/decimal"
+
 	financial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/frequency"
 	"github.com/razorpay/go-financial/enums/interesttype"
@@ -71,22 +73,36 @@ func main() {
 	if err != nil {
 		panic("location loading error")
 	}
-	currentDate := time.Now().In(loc)
-
+	currentDate := time.Date(2009, 11, 11, 4, 30, 0, 0, loc)
 	config := financial.Config{
-                // start date is inclusive
-		StartDate:      currentDate,
-                // end date is inclusive
-		EndDate:        currentDate.AddDate(15, 0, 0).AddDate(0, 0, -1), 
-		Frequency:      frequency.ANNUALLY,
-                // AmountBorrowed is in paisa
-		AmountBorrowed: 200000000,
-                // InterestType can be flat or reducing.
-		InterestType:   interesttype.REDUCING,
-                // interest is in basis points
-		Interest:       1200, 
-		PaymentPeriod:  paymentperiod.ENDING,
-		Round:          true,
+
+		// start date is inclusive
+		StartDate: currentDate,
+
+		// end date is inclusive.
+		EndDate:   currentDate.AddDate(15, 0, 0).AddDate(0, 0, -1),
+		Frequency: frequency.ANNUALLY,
+
+		// AmountBorrowed is in paisa
+		AmountBorrowed: decimal.NewFromInt(200000000),
+
+		// InterestType can be flat or reducing
+		InterestType: interesttype.REDUCING,
+
+		// interest is in basis points
+		Interest: decimal.NewFromInt(1200),
+
+		// amount is paid at the end of the period
+		PaymentPeriod: paymentperiod.ENDING,
+
+		// all values will be rounded
+		EnableRounding: true,
+
+		// it will be rounded to nearest int
+		RoundingPlaces: 0,
+
+		// no error is tolerated
+		RoundingErrorTolerance: decimal.Zero,
 	}
 	amortization, err := financial.NewAmortization(&config)
 	if err != nil {
@@ -135,25 +151,26 @@ package main
 
 import (
 	"fmt"
+
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
-	"math"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
-	rate := 0.06
+	rate := decimal.NewFromFloat(0.06)
 	nper := int64(10)
-	payment := float64(-10000)
-	pv := float64(-10000)
+	payment := decimal.NewFromInt(-10000)
+	pv := decimal.NewFromInt(-10000)
 	when := paymentperiod.ENDING
 
 	fv := gofinancial.Fv(rate, nper, payment, pv, when)
-	fmt.Printf("fv:%v", math.Round(fv))
-        // Output:
-        // fv:149716a
+	fmt.Printf("fv:%v", fv.Round(0))
+	// Output:
+	// fv:149716
 }
 ```
-[Run on go-playground](https://play.golang.org/p/l2-5aCHTBmH)
+[Run on go-playground](https://play.golang.org/p/B08Fs4TlYuF)
 
 
 ## Pv  
@@ -184,25 +201,26 @@ package main
 
 import (
 	"fmt"
+
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
-	"math"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
-	rate := 0.06
+	rate := decimal.NewFromFloat(0.06)
 	nper := int64(10)
-	payment := float64(-10000)
-	fv := float64(149716)
+	payment := decimal.NewFromInt(-10000)
+	fv := decimal.NewFromInt(149716)
 	when := paymentperiod.ENDING
 
 	pv := gofinancial.Pv(rate, nper, payment, fv, when)
-	fmt.Printf("pv:%v", math.Round(pv))	
+	fmt.Printf("pv:%v", pv.Round(0))
 	// Output:
-	// pv:-10000
+	// pv:-10000	
 }
 ```
-[Run on go-playground](https://play.golang.org/p/xe1dXKxDEcY)
+[Run on go-playground](https://play.golang.org/p/WW6cXQZa2_k)
 
 
 ## Npv
@@ -228,19 +246,19 @@ package main
 import (
 	"fmt"
 	gofinancial "github.com/razorpay/go-financial"	
-	"math"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
-	rate := 0.281
-	values := []float64{-100, 39, 59, 55, 20}
+	rate :=  decimal.NewFromFloat(0.281)
+	values := []decimal.Decimal{decimal.NewFromInt(-100), decimal.NewFromInt(39), decimal.NewFromInt(59), decimal.NewFromInt(55), decimal.NewFromInt(20)}
 	npv := gofinancial.Npv(rate, values)
-	fmt.Printf("npv:%v", math.Round(npv))
+	fmt.Printf("npv:%v", npv)
 	// Output:
-	// npv: -0.008478591638455768
+	// npv: -0.008478591638426
 }
 ```
-[Run on go-playground](https://play.golang.org/p/ma1it8-rFzn)
+[Run on go-playground](https://play.golang.org/p/4nzo1FOR3U0)
 
 
 ##  Pmt  
@@ -272,23 +290,23 @@ import (
 	"fmt"
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
-	"math"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
-	rate := 0.18 / 12
+	rate := decimal.NewFromFloat(0.18 / 12)
 	nper := int64(12 * 2)
-	pv := float64(100000)
-	fv := float64(0)
+	pv := decimal.NewFromInt(100000)
+	fv := decimal.NewFromInt(0)
 	when := paymentperiod.ENDING
 	pmt := gofinancial.Pmt(rate, nper, pv, fv, when)
-	fmt.Printf("payment:%v", math.Round(pmt))
+	fmt.Printf("payment:%v", pmt.Round(0))
         // Output:
         // payment:-4992
 }
 ```
 
-[Run on go-playground](https://play.golang.org/p/Xa4XsqKi1te)
+[Run on go-playground](https://play.golang.org/p/kFGoL9g4VM4)
 
 ### Example(Pmt-Investment)
 
@@ -301,22 +319,22 @@ import (
 	"fmt"
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
-	"math"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
-	rate := 0.06
+	rate := decimal.NewFromFloat(0.06)
 	nper := int64(10)
-	pv := float64(0)
-	fv := float64(1000000)
+	pv := decimal.NewFromInt(0)
+	fv := decimal.NewFromInt(1000000)
 	when := paymentperiod.BEGINNING
 	pmt := gofinancial.Pmt(rate, nper, pv, fv, when)
-	fmt.Printf("payment each year:%v", math.Round(pmt))
+	fmt.Printf("payment each year:%v", pmt.Round(0))
         // Output:
         // payment each year:-71574
 }
 ```
-[Run on go-playground](https://play.golang.org/p/iNeg4-1Y7fs)
+[Run on go-playground](https://play.golang.org/p/aXC3vt-3UwS)
 
 
 
@@ -348,19 +366,19 @@ import (
 	"fmt"
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
-	"math"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
-	rate := 0.18 / 12
+	rate := decimal.NewFromFloat(0.18 / 12)
 	nper := int64(12 * 2)
-	pv := float64(100000)
-	fv := float64(0)
+	pv := decimal.NewFromInt(100000)
+	fv := decimal.NewFromInt(0)
 	when := paymentperiod.ENDING
 
 	for i := int64(0); i < nper; i++ {
-		pmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
-		fmt.Printf("period:%d interest:%v\n", i+1, math.Round(pmt))
+		ipmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d interest:%v\n", i+1, ipmt.Round(0))
 	}
 	// Output:
 	// period:1 interest:-1500
@@ -389,7 +407,7 @@ func main() {
 	// period:24 interest:-74
 }
 ```
-[Run on go-playground](https://play.golang.org/p/CinprXnphL4)
+[Run on go-playground](https://play.golang.org/p/um60s2QZL_8)
 
 ### Example(IPmt-Investment)
 
@@ -402,19 +420,19 @@ import (
 	"fmt"
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
-	"math"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
-	rate := 0.06
+	rate := decimal.NewFromFloat(0.06)
 	nper := int64(10)
-	pv := float64(0)
-	fv := float64(1000000)
+	pv := decimal.NewFromInt(0)
+	fv := decimal.NewFromInt(1000000)
 	when := paymentperiod.BEGINNING
 
 	for i := int64(1); i < nper+1; i++ {
-		pmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
-		fmt.Printf("period:%d interest earned:%v\n", i, math.Round(pmt))
+		ipmt := gofinancial.IPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d interest earned:%v\n", i, ipmt.Round(0))
 	}
 	// Output:
 	// period:1 interest earned:4294
@@ -429,7 +447,7 @@ func main() {
 	// period:10 interest earned:56604
 }
 ```
-[Run on go-playground](https://play.golang.org/p/yqmymAllA7k)
+[Run on go-playground](https://play.golang.org/p/_NjNWuFulNp)
 
 ## PPmt  
   
@@ -458,48 +476,48 @@ import (
 	"fmt"
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
-	"math"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
-	rate := 0.18 / 12
+	rate := decimal.NewFromFloat(0.18 / 12)
 	nper := int64(12 * 2)
-	pv := float64(100000)
-	fv := float64(0)
+	pv := decimal.NewFromInt(100000)
+	fv := decimal.NewFromInt(0)
 	when := paymentperiod.ENDING
 
 	for i := int64(0); i < nper; i++ {
-		pmt := gofinancial.PPmt(rate, i+1, nper, pv, fv, when, true)
-		fmt.Printf("period:%d principal:%v\n", i+1, math.Round(pmt))
+		ppmt := gofinancial.PPmt(rate, i+1, nper, pv, fv, when)
+		fmt.Printf("period:%d principal:%v\n", i+1, ppmt.Round(0))
 	}
 	// Output:
 	// period:1 principal:-3492
-	// period:2 principal:-3544
+	// period:2 principal:-3545
 	// period:3 principal:-3598
 	// period:4 principal:-3652
-	// period:5 principal:-3706
+	// period:5 principal:-3707
 	// period:6 principal:-3762
-	// period:7 principal:-3818
+	// period:7 principal:-3819
 	// period:8 principal:-3876
 	// period:9 principal:-3934
 	// period:10 principal:-3993
 	// period:11 principal:-4053
-	// period:12 principal:-4113
-	// period:13 principal:-4175
+	// period:12 principal:-4114
+	// period:13 principal:-4176
 	// period:14 principal:-4238
-	// period:15 principal:-4301
+	// period:15 principal:-4302
 	// period:16 principal:-4366
-	// period:17 principal:-4431
+	// period:17 principal:-4432
 	// period:18 principal:-4498
-	// period:19 principal:-4565
+	// period:19 principal:-4566
 	// period:20 principal:-4634
-	// period:21 principal:-4703
+	// period:21 principal:-4704
 	// period:22 principal:-4774
 	// period:23 principal:-4846
-	// period:24 principal:-4918
+	// period:24 principal:-4919
 }
 ```
-[Run on go-playground](https://play.golang.org/p/bZuHcvmzUSK)
+[Run on go-playground](https://play.golang.org/p/s5nkkIeEj3x)
 
 
 
@@ -531,23 +549,27 @@ package main
 
 import (
 	"fmt"
-	"math"
 
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
+	"github.com/shopspring/decimal"
 )
 
+
 func main() {
-	rate := 0.06 / 12
-	fv := float64(0)
-	payment := float64(-200)
-	pv := float64(5000)
+	rate := decimal.NewFromFloat(0.06 / 12)
+	fv := decimal.NewFromFloat(0)
+	payment := decimal.NewFromFloat(-200)
+	pv := decimal.NewFromFloat(5000)
 	when := paymentperiod.ENDING
 
-	nper := gofinancial.Nper(rate, payment, pv, fv, when)
-	fmt.Printf("nper:%v", math.Ceil(nper))
+	nper,err := gofinancial.Nper(rate, payment, pv, fv, when)
+	if err != nil{
+		fmt.Printf("error:%v\n", err)
+	}
+	fmt.Printf("nper:%v",nper.Ceil())
 	// Output:
 	// nper:27
 }
 ```
-[Run on go-playground](https://play.golang.org/p/5LIuZiRcbMy)
+[Run on go-playground](https://play.golang.org/p/hm77MTPBGYg)

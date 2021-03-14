@@ -1,8 +1,9 @@
 package gofinancial
 
 import (
-	"errors"
 	"time"
+
+	"github.com/shopspring/decimal"
 
 	"github.com/razorpay/go-financial/enums/paymentperiod"
 
@@ -13,17 +14,19 @@ import (
 
 // Config is used to store details used in generation of amortization table.
 type Config struct {
-	StartDate      time.Time
-	EndDate        time.Time
-	Frequency      frequency.Type
-	AmountBorrowed int64
-	InterestType   interesttype.Type
-	Interest       int64
-	PaymentPeriod  paymentperiod.Type
-	Round          bool
-	periods        int64       // derived
-	startDates     []time.Time // derived
-	endDates       []time.Time // derived
+	StartDate              time.Time          // Starting day of the amortization schedule(inclusive)
+	EndDate                time.Time          // Ending day of the amortization schedule(inclusive)
+	Frequency              frequency.Type     // Frequency enum with DAILY, WEEKLY, MONTHLY or ANNUALLY
+	AmountBorrowed         decimal.Decimal    // Amount Borrowed
+	InterestType           interesttype.Type  // InterestType enum with FLAT or REDUCING value.
+	Interest               decimal.Decimal    // Interest in basis points
+	PaymentPeriod          paymentperiod.Type // Payment period enum to know whether payment made at the BEGINNING or ENDING of a period
+	EnableRounding         bool               // If enabled, the final values in amortization schedule are rounded
+	RoundingPlaces         int32              // If specified, the final values in amortization schedule are rounded to these many places
+	RoundingErrorTolerance decimal.Decimal    // Any difference in [payment-(principal+interest)] will be adjusted in interest component, upto the RoundingErrorTolerance value specified
+	periods                int64              // derived
+	startDates             []time.Time        // derived
+	endDates               []time.Time        // derived
 }
 
 func (c *Config) setPeriodsAndDates() error {
@@ -33,77 +36,74 @@ func (c *Config) setPeriodsAndDates() error {
 	ey, em, ed := c.EndDate.Date()
 	endDate := time.Date(ey, em, ed, 0, 0, 0, 0, c.EndDate.Location())
 
-	days := int64(endDate.Sub(startDate).Hours()/24) + 1
-	switch c.Frequency {
-	case frequency.DAILY:
-		c.periods = days
-		for i := 0; i < int(c.periods); i++ {
-			date := startDate.AddDate(0, 0, i)
-			if i == 0 {
-				c.startDates = append(c.startDates, c.StartDate)
-				c.endDates = append(c.endDates, getEndDates(date, frequency.DAILY))
-			} else {
-				c.startDates = append(c.startDates, date)
-				c.endDates = append(c.endDates, getEndDates(date, frequency.DAILY))
-			}
-		}
-	case frequency.WEEKLY:
-		if days%7 != 0 {
-			return errors.New("uneven end date")
-		}
-		c.periods = days / 7
-		for i := 0; i < int(c.periods); i++ {
-			date := startDate.AddDate(0, 0, 7*i)
-			if i == 0 {
-				c.startDates = append(c.startDates, c.StartDate)
-				c.endDates = append(c.endDates, getEndDates(date, frequency.WEEKLY))
-			} else {
-				c.startDates = append(c.startDates, date)
-				c.endDates = append(c.endDates, getEndDates(date, frequency.WEEKLY))
-			}
-
-		}
-
-	case frequency.MONTHLY:
-		months, err := getMonthsBetweenDates(c.StartDate, c.EndDate)
+	period, err := GetPeriodDifference(startDate, endDate, c.Frequency)
+	if err != nil {
+		return err
+	}
+	c.periods = int64(period)
+	for i := 0; i < period; i++ {
+		date, err := getStartDate(startDate, c.Frequency, i)
 		if err != nil {
 			return err
 		}
-		c.periods = int64(*months)
-		for i := 0; i < int(c.periods); i++ {
-			date := startDate.AddDate(0, i, 0)
-			if i == 0 {
-				c.startDates = append(c.startDates, c.StartDate)
-				c.endDates = append(c.endDates, getEndDates(date, frequency.MONTHLY))
-			} else {
-				c.startDates = append(c.startDates, date)
-				c.endDates = append(c.endDates, getEndDates(date, frequency.MONTHLY))
-			}
-
+		if i == 0 {
+			c.startDates = append(c.startDates, c.StartDate)
+		} else {
+			c.startDates = append(c.startDates, date)
 		}
-
-	case frequency.ANNUALLY:
-		years, err := getYearsBetweenDates(startDate, endDate)
-		if err != nil {
+		if endDate, err := getEndDates(date, c.Frequency); err != nil {
 			return err
+		} else {
+			c.endDates = append(c.endDates, endDate)
 		}
-		c.periods = int64(*years)
-		for i := 0; i < int(c.periods); i++ {
-			date := startDate.AddDate(i, 0, 0)
-			if i == 0 {
-				c.startDates = append(c.startDates, c.StartDate)
-				c.endDates = append(c.endDates, getEndDates(date, frequency.ANNUALLY))
-			} else {
-				c.startDates = append(c.startDates, date)
-				c.endDates = append(c.endDates, getEndDates(date, frequency.ANNUALLY))
-			}
-
-		}
-	default:
-		return ErrInvalidFrequency
-
 	}
 	return nil
+}
+
+func GetPeriodDifference(from time.Time, to time.Time, freq frequency.Type) (int, error) {
+	var periods int
+	switch freq {
+	case frequency.DAILY:
+		periods = int(to.Sub(from).Hours()/24) + 1
+	case frequency.WEEKLY:
+		days := int(to.Sub(from).Hours()/24) + 1
+		if days%7 != 0 {
+			return -1, ErrUnevenEndDate
+		}
+		periods = days / 7
+	case frequency.MONTHLY:
+		months, err := getMonthsBetweenDates(from, to)
+		if err != nil {
+			return -1, err
+		}
+		periods = *months
+	case frequency.ANNUALLY:
+		years, err := getYearsBetweenDates(from, to)
+		if err != nil {
+			return -1, err
+		}
+		periods = *years
+	default:
+		return -1, ErrInvalidFrequency
+	}
+	return periods, nil
+}
+
+func getStartDate(date time.Time, freq frequency.Type, index int) (time.Time, error) {
+	var startDate time.Time
+	switch freq {
+	case frequency.DAILY:
+		startDate = date.AddDate(0, 0, index)
+	case frequency.WEEKLY:
+		startDate = date.AddDate(0, 0, 7*index)
+	case frequency.MONTHLY:
+		startDate = date.AddDate(0, index, 0)
+	case frequency.ANNUALLY:
+		startDate = date.AddDate(index, 0, 0)
+	default:
+		return time.Time{}, ErrInvalidFrequency
+	}
+	return startDate, nil
 }
 
 func getMonthsBetweenDates(start time.Time, end time.Time) (*int, error) {
@@ -132,7 +132,7 @@ func getYearsBetweenDates(start time.Time, end time.Time) (*int, error) {
 	return &count, nil
 }
 
-func getEndDates(date time.Time, freq frequency.Type) time.Time {
+func getEndDates(date time.Time, freq frequency.Type) (time.Time, error) {
 	var nextDate time.Time
 	switch freq {
 	case frequency.DAILY:
@@ -146,10 +146,17 @@ func getEndDates(date time.Time, freq frequency.Type) time.Time {
 	case frequency.ANNUALLY:
 		date = date.AddDate(1, 0, 0).AddDate(0, 0, -1)
 		nextDate = time.Date(date.Year(), date.Month(), date.Day(), 23, 59, 59, 0, date.Location())
+	default:
+		return time.Time{}, ErrInvalidFrequency
 	}
-	return nextDate
+	return nextDate, nil
 }
 
-func (c *Config) getInterestRatePerPeriodInDecimal() float64 {
-	return float64(c.Interest) / 100 / 100 / float64(c.Frequency.Value())
+func (c *Config) getInterestRatePerPeriodInDecimal() decimal.Decimal {
+	hundred := decimal.NewFromInt(100)
+	freq := decimal.NewFromInt(int64(c.Frequency.Value()))
+	interestInPercent := c.Interest.Div(hundred)
+	InterestInDecimal := interestInPercent.Div(hundred)
+	InterestPerPeriod := InterestInDecimal.Div(freq)
+	return InterestPerPeriod
 }
