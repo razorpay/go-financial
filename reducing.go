@@ -3,8 +3,7 @@ package gofinancial
 import "github.com/shopspring/decimal"
 
 // Reducing implements financial methods for facilitating a loan use case, following a reducing rate of interest.
-type Reducing struct {
-}
+type Reducing struct{}
 
 // GetPrincipal returns principal amount contribution in a given period towards a loan, depending on config.
 func (r *Reducing) GetPrincipal(config Config, period int64) decimal.Decimal {

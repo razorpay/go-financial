@@ -3,8 +3,7 @@ package gofinancial
 import "github.com/shopspring/decimal"
 
 // Flat implements financial methods for facilitating a loan use case, following a flat rate of interest.
-type Flat struct {
-}
+type Flat struct{}
 
 // GetPrincipal returns principal amount contribution in a given period towards a loan, depending on config.
 func (f *Flat) GetPrincipal(config Config, _ int64) decimal.Decimal {
