@@ -7,11 +7,11 @@ const (
 	ENDING
 )
 
-var value = map[Type]float64{
-	BEGINNING: 1.0,
-	ENDING:    0.0,
+var value = map[Type]int64{
+	BEGINNING: 1,
+	ENDING:    0,
 }
 
-func (t Type) Value() float64 {
+func (t Type) Value() int64 {
 	return value[t]
 }
