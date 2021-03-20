@@ -258,3 +258,83 @@ func Npv(rate float64, values []float64) float64 {
 	}
 	return internalNpv
 }
+
+/*
+This function computs the ratio that is used to find a single value that sets the non-liner equation to zero
+
+Params:
+ nper 	: number of compounding periods
+ pmt	: a (fixed) payment, paid either
+	  	  at the beginning (when = 1) or the end (when = 0) of each period
+ pv		: a present value
+ fv		: a future value
+ when 	: specification of whether payment is made
+		  at the beginning (when = 1) or the end (when = 0) of each period
+ curRate: the rate compounded once per period rate
+*/
+func getRateRatio(pv, fv, pmt, curRate float64, nper int64, when paymentperiod.Type) float64 {
+	f0 := math.Pow((1 + curRate), float64(nper))
+	f1 := f0 / (1 + curRate)
+	y := fv + pv*f0 + pmt*(1.0+curRate*when.Value())*(f0-1)/curRate
+	derivative := (float64(nper) * f1 * pv) + (pmt * ((when.Value() * (f0 - 1) / curRate) + ((1.0 + curRate*when.Value()) * ((curRate*float64(nper)*f1 - f0 + 1) / (curRate * curRate)))))
+
+	return y / derivative
+}
+
+/*
+Rate computes the Interest rate per period by running Newton Rapson to find an approximate value for:
+
+y = fv + pv*(1+rate)**nper + pmt*(1+rate*when)/rate*((1+rate)**nper-1)
+(0 - y_previous) /(rate - rate_previous) = dy/drate {derivative of y w.r.t. rate}
+
+
+Params:
+ nper 	: number of compounding periods
+ pmt	: a (fixed) payment, paid either
+	  	  at the beginning (when = 1) or the end (when = 0) of each period
+ pv		: a present value
+ fv		: a future value
+ when 	: specification of whether payment is made
+		  at the beginning (when = 1) or the end (when = 0) of each period
+ params	: optional parameters for maxIter, tolerance, and initialGuess
+References:
+	Wheeler, D. A., E. Rathke, and R. Weir (Eds.) (2009, May). Open Document
+    Format for Office Applications (OpenDocument)v1.2, Part 2: Recalculated
+    Formula (OpenFormula) Format - Annotated Version, Pre-Draft 12.
+    Organization for the Advancement of Structured Information Standards
+    (OASIS). Billerica, MA, USA. [ODT Document]. Available:
+    http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
+    OpenDocument-formula-20090508.odt
+*/
+
+func Rate(pv, fv, pmt float64, nper int64, when paymentperiod.Type, params ...float64) (float64, bool) {
+	initialGuess := 0.1
+	tolerance := 1e-6
+	maxIter := 100
+
+	for index, value := range params {
+		switch index {
+		case 0:
+			maxIter = int(value)
+		case 1:
+			initialGuess = value
+		case 2:
+			tolerance = value
+		default:
+			//no more values to be read
+		}
+	}
+
+	var nextIterRate, currentIterRate float64 = initialGuess, initialGuess
+
+	for iter := 0; iter < maxIter; iter++ {
+		currentIterRate = nextIterRate
+		nextIterRate = currentIterRate - getRateRatio(pv, fv, pmt, currentIterRate, nper, when)
+	}
+
+	if math.Abs(nextIterRate-currentIterRate) > tolerance {
+		return nextIterRate, false
+	}
+
+	return nextIterRate, true
+}

@@ -21,7 +21,7 @@ which are as follows:
 | ppmt                         |  ✅   |   Computes principal payment for a loan|
 | nper                         |  ✅   |    Computes the number of periodic payments|
 | pv                           |  ✅   |   Computes the present value of a payment|
-| rate                         |      |    Computes the rate of interest per period|
+| rate                         |  ✅   |    Computes the rate of interest per period|
 | irr                          |      |    Computes the internal rate of return|
 | npv                          |  ✅   |   Computes the net present value of a series of cash flow|
 | mirr                         |      |    Computes the modified internal rate of return|
@@ -45,9 +45,11 @@ While the numpy-financial package contains a set of elementary financial functio
     + [Example(IPmt-Investment)](#exampleipmt-investment)
   * [PPmt(Principal Payment)](#ppmt)
     + [Example(PPmt-Loan)](#exampleppmt-loan)
-	* [Nper(Number of payments)](#nper)
+  * [Nper(Number of payments)](#nper)
     + [Example(Nper-Loan)](#examplenper-loan)
-
+  * [Rate(Interest Rate)](#rate)
+	+ [Example(Rate-Investment)](#examplerate-investment)
+ 
  Detailed documentation is available at [godoc](https://godoc.org/github.com/razorpay/go-financial).
 ## Amortisation(Generate Table)  
   
@@ -551,3 +553,67 @@ func main() {
 }
 ```
 [Run on go-playground](https://play.golang.org/p/5LIuZiRcbMy)
+
+## Rate  
+
+```go  
+func Rate(pv, fv, pmt float64, nper int64, when paymentperiod.Type, params ...float64) (float64, bool)
+```  
+Params:  
+```text
+pv     : a present value
+fv     : a future value
+pmt    : a (fixed) payment, paid either at the beginning (when =  1)
+         or the end (when = 0) of each period
+pv     : a present value
+fv     : a future value
+nper   : total number of periods to be compounded for
+when   : specification of whether payment is made at the beginning (when = 1)
+         or the end (when = 0) of each period
+params : varadic variable with following specifications:
+		 0th index -> total number of iterations for which function should run (default is 100)
+		 1st index -> an initial guess amount to start from (default is 0.1)
+		 2nd index -> tolerance threshold (default is 1e-6)
+``` 
+
+Returns:
+```text
+rate    : a float64 value for the corresponding rate
+valid   : returns true if rate difference is less than the threshold (returns false conversely)
+```
+
+Rate computes the interest rate to ensure a balanced cashflow equation
+
+### Example(Rate-Investment)
+
+If an investment of $2000 is done and an amount of $100 is added at the start of each period, for what periodic interest rate would the invester be able to withdraw $3000 after the end of 4 periods ?
+
+```go
+package main
+
+import (
+	"fmt"
+	"math"
+
+	gofinancial "github.com/razorpay/go-financial"
+	"github.com/razorpay/go-financial/enums/paymentperiod"
+)
+
+func main() {
+	fv := float64(-3000)
+	pmt := float64(100)
+	pv := float64(2000)
+	when := paymentperiod.BEGINNING
+	nper := int64(4)
+
+	rate, ok := gofinancial.Rate(pv, fv, pmt, nper, when)
+	if ok {
+		fmt.Printf("rate:%v ", rate)
+	} else {
+		fmt.Printf("NaN")
+	}
+	// Output:
+	// rate: 0.06106257989825202
+}
+```
+[Run on go-playground](https://play.golang.org/p/aExBDDafHH4)
