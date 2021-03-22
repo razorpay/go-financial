@@ -357,47 +357,42 @@ func Test_Nper(t *testing.T) {
 }
 
 func Test_rate(t *testing.T) {
-	//res, err := Rate(2000.0, -3000.0, 100.0, 4, 1.0)
-	//0.06106257989825202
-	//res, err := Rate(-3000, 1000, 500, 2, 1.0)
-	//-0.25968757625671507
-
 	type args struct {
-		pv   float64
-		fv   float64
-		pmt  float64
+		pv   decimal.Decimal
+		fv   decimal.Decimal
+		pmt  decimal.Decimal
 		nper int64
 		when paymentperiod.Type
 	}
 	tests := []struct {
 		name string
 		args args
-		want float64
+		want decimal.Decimal
 	}{
 		{
 			name: "success", args: args{
-				pv:   2000,
-				fv:   -3000,
-				pmt:  100,
+				pv:   decimal.NewFromInt(2000),
+				fv:   decimal.NewFromInt(-3000),
+				pmt:  decimal.NewFromInt(100),
 				nper: 4,
 				when: paymentperiod.BEGINNING,
 			},
-			want: 0.06106257989825202,
+			want: decimal.NewFromFloat(0.06106257989825202),
 		}, {
 			name: "success", args: args{
-				pv:   -3000,
-				fv:   1000,
-				pmt:  500,
+				pv:   decimal.NewFromInt(-3000),
+				fv:   decimal.NewFromInt(1000),
+				pmt:  decimal.NewFromInt(500),
 				nper: 2,
 				when: paymentperiod.BEGINNING,
 			},
-			want: -0.25968757625671507,
+			want: decimal.NewFromFloat(-0.25968757625671507),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, _ := Rate(tt.args.pv, tt.args.fv, tt.args.pmt, tt.args.nper, tt.args.when); assertions.ShouldAlmostEqual(got, tt.want) != "" {
-				t.Errorf("fv() = %v, want %v", got, tt.want)
+			if got, isValid := Rate(tt.args.pv, tt.args.fv, tt.args.pmt, tt.args.nper, tt.args.when); !isValid || isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)) != nil {
+				t.Errorf("rate() = (%v,%v), want (%v,%v)", got, isValid, tt.want, true)
 			}
 		})
 	}

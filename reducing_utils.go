@@ -304,13 +304,27 @@ Params:
 		  at the beginning (when = 1) or the end (when = 0) of each period
  curRate: the rate compounded once per period rate
 */
-func getRateRatio(pv, fv, pmt, curRate float64, nper int64, when paymentperiod.Type) float64 {
-	f0 := math.Pow((1 + curRate), float64(nper))
-	f1 := f0 / (1 + curRate)
-	y := fv + pv*f0 + pmt*(1.0+curRate*when.Value())*(f0-1)/curRate
-	derivative := (float64(nper) * f1 * pv) + (pmt * ((when.Value() * (f0 - 1) / curRate) + ((1.0 + curRate*when.Value()) * ((curRate*float64(nper)*f1 - f0 + 1) / (curRate * curRate)))))
+func getRateRatio(pv, fv, pmt, curRate decimal.Decimal, nper int64, when paymentperiod.Type) decimal.Decimal {
+	oneInDecimal := decimal.NewFromInt(1)
+	whenInDecimal := decimal.NewFromInt(when.Value())
+	nperInDecimal := decimal.NewFromInt(nper)
 
-	return y / derivative
+	f0 := curRate.Add(oneInDecimal).Pow(decimal.NewFromInt(nper)) // f0 := math.Pow((1 + curRate), float64(nper))
+	f1 := f0.Div(curRate.Add(oneInDecimal))                       // f1 := f0 / (1 + curRate)
+
+	yP0 := pv.Mul(f0)
+	yP1 := pmt.Mul(oneInDecimal.Add(curRate.Mul(whenInDecimal))).Mul(f0.Sub(oneInDecimal)).Div(curRate)
+	y := fv.Add(yP0).Add(yP1) // y := fv + pv*f0 + pmt*(1.0+curRate*when.Value())*(f0-1)/curRate
+
+	derivativeP0 := nperInDecimal.Mul(f1).Mul(pv)
+	derivativeP1 := pmt.Mul(whenInDecimal).Mul(f0.Sub(oneInDecimal)).Div(curRate)
+	derivativeP2s0 := oneInDecimal.Add(curRate.Mul(whenInDecimal))
+	derivativeP2s1 := ((curRate.Mul((nperInDecimal)).Mul(f1)).Sub(f0).Add(oneInDecimal)).Div(curRate.Mul(curRate))
+	derivativeP2 := derivativeP2s0.Mul(derivativeP2s1)
+	derivative := derivativeP0.Add(derivativeP1).Add(derivativeP2)
+	// derivative := (float64(nper) * f1 * pv) + (pmt * ((when.Value() * (f0 - 1) / curRate) + ((1.0 + curRate*when.Value()) * ((curRate*float64(nper)*f1 - f0 + 1) / (curRate * curRate)))))
+
+	return y.Div(derivative)
 }
 
 /*
@@ -339,32 +353,32 @@ References:
     OpenDocument-formula-20090508.odt
 */
 
-func Rate(pv, fv, pmt float64, nper int64, when paymentperiod.Type, params ...float64) (float64, bool) {
-	initialGuess := 0.1
-	tolerance := 1e-6
+func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, params ...decimal.Decimal) (decimal.Decimal, bool) {
+	initialGuess := decimal.NewFromFloat(0.1)
+	tolerance := decimal.NewFromFloat(1e-6)
 	maxIter := 100
 
 	for index, value := range params {
 		switch index {
 		case 0:
-			maxIter = int(value)
+			maxIter = int(value.IntPart())
 		case 1:
 			initialGuess = value
 		case 2:
 			tolerance = value
 		default:
-			//no more values to be read
+			// no more values to be read
 		}
 	}
 
-	var nextIterRate, currentIterRate float64 = initialGuess, initialGuess
+	var nextIterRate, currentIterRate decimal.Decimal = initialGuess, initialGuess
 
 	for iter := 0; iter < maxIter; iter++ {
 		currentIterRate = nextIterRate
-		nextIterRate = currentIterRate - getRateRatio(pv, fv, pmt, currentIterRate, nper, when)
+		nextIterRate = currentIterRate.Sub(getRateRatio(pv, fv, pmt, currentIterRate, nper, when))
 	}
 
-	if math.Abs(nextIterRate-currentIterRate) > tolerance {
+	if nextIterRate.Sub(currentIterRate).Abs().GreaterThan(tolerance) {
 		return nextIterRate, false
 	}
 

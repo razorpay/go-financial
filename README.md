@@ -600,7 +600,7 @@ params : varadic variable with following specifications:
 
 Returns:
 ```text
-rate    : a float64 value for the corresponding rate
+rate    : a value for the corresponding rate
 valid   : returns true if rate difference is less than the threshold (returns false conversely)
 ```
 
@@ -615,18 +615,17 @@ package main
 
 import (
 	"fmt"
-	"math"
-
 	gofinancial "github.com/razorpay/go-financial"
 	"github.com/razorpay/go-financial/enums/paymentperiod"
+	"github.com/shopspring/decimal"
 )
 
 func main() {
-	fv := float64(-3000)
-	pmt := float64(100)
-	pv := float64(2000)
+	fv := decimal.NewFromFloat(-3000)
+	pmt := decimal.NewFromFloat(100)
+	pv := decimal.NewFromFloat(2000)
 	when := paymentperiod.BEGINNING
-	nper := int64(4)
+	nper := decimal.NewFromInt(4)
 
 	rate, ok := gofinancial.Rate(pv, fv, pmt, nper, when)
 	if ok {
@@ -638,4 +637,4 @@ func main() {
 	// rate: 0.06106257989825202
 }
 ```
-[Run on go-playground](https://play.golang.org/p/aExBDDafHH4)
+[Run on go-playground](https://play.golang.org/p/I655r9QWu0H)
