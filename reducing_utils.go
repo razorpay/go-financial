@@ -342,7 +342,9 @@ Params:
  fv		: a future value
  when 	: specification of whether payment is made
 		  at the beginning (when = 1) or the end (when = 0) of each period
- params	: optional parameters for maxIter, tolerance, and initialGuess
+ maxIter : total number of iterations to perform calculation
+ tolerance : accept result only if the difference in iteration values is less than the tolerance provided
+ initialGuess : an initial point to start approximating from
 References:
 	Wheeler, D. A., E. Rathke, and R. Weir (Eds.) (2009, May). Open Document
     Format for Office Applications (OpenDocument)v1.2, Part 2: Recalculated
@@ -353,27 +355,10 @@ References:
     OpenDocument-formula-20090508.odt
 */
 
-func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, params ...decimal.Decimal) (decimal.Decimal, bool) {
-	initialGuess := decimal.NewFromFloat(0.1)
-	tolerance := decimal.NewFromFloat(1e-6)
-	maxIter := 100
-
-	for index, value := range params {
-		switch index {
-		case 0:
-			maxIter = int(value.IntPart())
-		case 1:
-			initialGuess = value
-		case 2:
-			tolerance = value
-		default:
-			// no more values to be read
-		}
-	}
-
+func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxIter int64, tolerance, initialGuess decimal.Decimal) (decimal.Decimal, bool) {
 	var nextIterRate, currentIterRate decimal.Decimal = initialGuess, initialGuess
 
-	for iter := 0; iter < maxIter; iter++ {
+	for iter := int64(0); iter < maxIter; iter++ {
 		currentIterRate = nextIterRate
 		nextIterRate = currentIterRate.Sub(getRateRatio(pv, fv, pmt, currentIterRate, nper, when))
 	}

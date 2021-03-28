@@ -579,7 +579,7 @@ func main() {
 ## Rate  
 
 ```go  
-func Rate(pv, fv, pmt float64, nper int64, when paymentperiod.Type, params ...float64) (float64, bool)
+func Rate(pv, fv, pmt decimal, nper int64, when paymentperiod.Type, params ...float64) (decimal, bool)
 ```  
 Params:  
 ```text
@@ -587,15 +587,12 @@ pv     : a present value
 fv     : a future value
 pmt    : a (fixed) payment, paid either at the beginning (when =  1)
          or the end (when = 0) of each period
-pv     : a present value
-fv     : a future value
 nper   : total number of periods to be compounded for
 when   : specification of whether payment is made at the beginning (when = 1)
          or the end (when = 0) of each period
-params : varadic variable with following specifications:
-		 0th index -> total number of iterations for which function should run (default is 100)
-		 1st index -> an initial guess amount to start from (default is 0.1)
-		 2nd index -> tolerance threshold (default is 1e-6)
+maxIter	: total number of iterations for which function should run
+tolerance : tolerance threshold for acceptable result
+initialGuess : an initial guess amount to start from
 ``` 
 
 Returns:
@@ -608,7 +605,7 @@ Rate computes the interest rate to ensure a balanced cashflow equation
 
 ### Example(Rate-Investment)
 
-If an investment of $2000 is done and an amount of $100 is added at the start of each period, for what periodic interest rate would the invester be able to withdraw $3000 after the end of 4 periods ?
+If an investment of $2000 is done and an amount of $100 is added at the start of each period, for what periodic interest rate would the invester be able to withdraw $3000 after the end of 4 periods ? (assuming 100 iterations, 1e-6 threshold and 0.1 as initial guessing point)
 
 ```go
 package main
@@ -626,8 +623,11 @@ func main() {
 	pv := decimal.NewFromFloat(2000)
 	when := paymentperiod.BEGINNING
 	nper := decimal.NewFromInt(4)
+	maxIter := 100
+	tolerance := decimal.NewFromFloat(1e-6)
+	initialGuess := decimal.NewFromFloat(0.1),
 
-	rate, ok := gofinancial.Rate(pv, fv, pmt, nper, when)
+	rate, ok := gofinancial.Rate(pv, fv, pmt, nper, when, maxIter, tolerance, initialGuess)
 	if ok {
 		fmt.Printf("rate:%v ", rate)
 	} else {
@@ -637,4 +637,4 @@ func main() {
 	// rate: 0.06106257989825202
 }
 ```
-[Run on go-playground](https://play.golang.org/p/I655r9QWu0H)
+[Run on go-playground](https://play.golang.org/p/9khVcHwjkh5)
