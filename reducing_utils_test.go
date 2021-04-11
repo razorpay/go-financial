@@ -368,10 +368,10 @@ func Test_Rate(t *testing.T) {
 		initialGuess decimal.Decimal
 	}
 	tests := []struct {
-		name      string
-		args      args
-		wantValue decimal.Decimal
-		validity  bool
+		name     string
+		args     args
+		want     decimal.Decimal
+		validity bool
 	}{
 		{
 			name: "success", args: args{
@@ -384,8 +384,8 @@ func Test_Rate(t *testing.T) {
 				tolerance:    decimal.NewFromFloat(1e-7),
 				initialGuess: decimal.NewFromFloat(0.1),
 			},
-			wantValue: decimal.NewFromFloat(0.06106257989825202),
-			validity:  true,
+			want:     decimal.NewFromFloat(0.06106257989825202),
+			validity: true,
 		}, {
 			name: "success", args: args{
 				pv:           decimal.NewFromInt(-3000),
@@ -397,8 +397,8 @@ func Test_Rate(t *testing.T) {
 				tolerance:    decimal.NewFromFloat(1e-7),
 				initialGuess: decimal.NewFromFloat(0.1),
 			},
-			wantValue: decimal.NewFromFloat(-0.25968757625671507),
-			validity:  true,
+			want:     decimal.NewFromFloat(-0.25968757625671507),
+			validity: true,
 		}, {
 			name: "failure", args: args{
 				pv:           decimal.NewFromInt(3000),
@@ -410,14 +410,14 @@ func Test_Rate(t *testing.T) {
 				tolerance:    decimal.NewFromFloat(1e-7),
 				initialGuess: decimal.NewFromFloat(0.1),
 			},
-			wantValue: decimal.NewFromFloat(0.4907342754506849),
-			validity:  false,
+			want:     decimal.NewFromFloat(0.4907342754506849),
+			validity: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, isValid := Rate(tt.args.pv, tt.args.fv, tt.args.pmt, tt.args.nper, tt.args.when, tt.args.maxIter, tt.args.tolerance, tt.args.initialGuess); isValid != tt.validity || isAlmostEqual(got, tt.wantValue, decimal.NewFromFloat(precision)) != nil {
-				t.Errorf("Rate returned (%v,%v), wanted (%v,%v)", got, isValid, tt.wantValue, tt.validity)
+			if got, isValid := Rate(tt.args.pv, tt.args.fv, tt.args.pmt, tt.args.nper, tt.args.when, tt.args.maxIter, tt.args.tolerance, tt.args.initialGuess); isValid != tt.validity || isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)) != nil {
+				t.Errorf("Rate returned (%v,%v), wanted (%v,%v)", got, isValid, tt.want, tt.validity)
 			}
 		})
 	}
