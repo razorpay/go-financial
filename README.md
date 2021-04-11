@@ -579,7 +579,7 @@ func main() {
 ## Rate  
 
 ```go  
-func Rate(pv, fv, pmt decimal, nper int64, when paymentperiod.Type, params ...float64) (decimal, bool)
+func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxIter int64, tolerance, initialGuess decimal.Decimal) (decimal.Decimal, bool) 
 ```  
 Params:  
 ```text
