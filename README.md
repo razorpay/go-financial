@@ -579,7 +579,7 @@ func main() {
 ## Rate  
 
 ```go  
-func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxIter int64, tolerance, initialGuess decimal.Decimal) (decimal.Decimal, bool) 
+func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxIter int64, tolerance, initialGuess decimal.Decimal) (decimal.Decimal, error) 
 ```  
 Params:  
 ```text
@@ -598,7 +598,7 @@ initialGuess : an initial guess amount to start from
 Returns:
 ```text
 rate    : a value for the corresponding rate
-valid   : returns true if rate difference is less than the threshold (returns false conversely)
+error   : returns nil if rate difference is less than the threshold (returns an error conversely)
 ```
 
 Rate computes the interest rate to ensure a balanced cashflow equation
@@ -627,14 +627,14 @@ func main() {
 	tolerance := decimal.NewFromFloat(1e-6)
 	initialGuess := decimal.NewFromFloat(0.1),
 
-	rate, ok := gofinancial.Rate(pv, fv, pmt, nper, when, maxIter, tolerance, initialGuess)
-	if ok {
-		fmt.Printf("rate:%v ", rate)
-	} else {
+	rate, err := gofinancial.Rate(pv, fv, pmt, nper, when, maxIter, tolerance, initialGuess)
+	if err != nil {
 		fmt.Printf("NaN")
+	} else {
+		fmt.Printf("rate:%v ", rate)		
 	}
 	// Output:
 	// rate: 0.06106257989825202
 }
 ```
-[Run on go-playground](https://play.golang.org/p/9khVcHwjkh5)
+[Run on go-playground](https://play.golang.org/p/H2uybe1dbRj)
