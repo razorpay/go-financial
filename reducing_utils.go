@@ -360,7 +360,7 @@ func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxI
 	for iter := int64(0); iter < maxIter; iter++ {
 		currentIterRate = nextIterRate
 		nextIterRate = currentIterRate.Sub(getRateRatio(pv, fv, pmt, currentIterRate, nper, when))
-		//skip further loops if |nextIterRate-currentIterRate| < tolerance
+		// skip further loops if |nextIterRate-currentIterRate| < tolerance
 		if nextIterRate.Sub(currentIterRate).Abs().LessThan(tolerance) {
 			break
 		}
