@@ -629,9 +629,9 @@ func main() {
 
 	rate, err := gofinancial.Rate(pv, fv, pmt, nper, when, maxIter, tolerance, initialGuess)
 	if err != nil {
-		fmt.Printf("NaN")
+		fmt.Printf(err)
 	} else {
-		fmt.Printf("rate:%v ", rate)		
+		fmt.Printf("rate: %v ", rate)
 	}
 	// Output:
 	// rate: 0.06106257989825202
