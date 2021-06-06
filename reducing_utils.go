@@ -290,3 +290,84 @@ func Npv(rate decimal.Decimal, values []decimal.Decimal) decimal.Decimal {
 	}
 	return internalNpv
 }
+
+/*
+This function computes the ratio that is used to find a single value that sets the non-liner equation to zero
+
+Params:
+
+ nper 	: number of compounding periods
+ pmt	: a (fixed) payment, paid either
+	  	  at the beginning (when = 1) or the end (when = 0) of each period
+ pv		: a present value
+ fv		: a future value
+ when 	: specification of whether payment is made
+		  at the beginning (when = 1) or the end (when = 0) of each period
+ curRate: the rate compounded once per period rate
+*/
+func getRateRatio(pv, fv, pmt, curRate decimal.Decimal, nper int64, when paymentperiod.Type) decimal.Decimal {
+	oneInDecimal := decimal.NewFromInt(1)
+	whenInDecimal := decimal.NewFromInt(when.Value())
+	nperInDecimal := decimal.NewFromInt(nper)
+
+	f0 := curRate.Add(oneInDecimal).Pow(decimal.NewFromInt(nper)) // f0 := math.Pow((1 + curRate), float64(nper))
+	f1 := f0.Div(curRate.Add(oneInDecimal))                       // f1 := f0 / (1 + curRate)
+
+	yP0 := pv.Mul(f0)
+	yP1 := pmt.Mul(oneInDecimal.Add(curRate.Mul(whenInDecimal))).Mul(f0.Sub(oneInDecimal)).Div(curRate)
+	y := fv.Add(yP0).Add(yP1) // y := fv + pv*f0 + pmt*(1.0+curRate*when.Value())*(f0-1)/curRate
+
+	derivativeP0 := nperInDecimal.Mul(f1).Mul(pv)
+	derivativeP1 := pmt.Mul(whenInDecimal).Mul(f0.Sub(oneInDecimal)).Div(curRate)
+	derivativeP2s0 := oneInDecimal.Add(curRate.Mul(whenInDecimal))
+	derivativeP2s1 := ((curRate.Mul((nperInDecimal)).Mul(f1)).Sub(f0).Add(oneInDecimal)).Div(curRate.Mul(curRate))
+	derivativeP2 := derivativeP2s0.Mul(derivativeP2s1)
+	derivative := derivativeP0.Add(derivativeP1).Add(derivativeP2)
+	// derivative := (float64(nper) * f1 * pv) + (pmt * ((when.Value() * (f0 - 1) / curRate) + ((1.0 + curRate*when.Value()) * ((curRate*float64(nper)*f1 - f0 + 1) / (curRate * curRate)))))
+
+	return y.Div(derivative)
+}
+
+/*
+Rate computes the Interest rate per period by running Newton Rapson to find an approximate value for:
+ y = fv + pv*(1+rate)**nper + pmt*(1+rate*when)/rate*((1+rate)**nper-1)*(0 - y_previous) /(rate - rate_previous) = dy/drate {derivative of y w.r.t. rate}
+
+Params:
+ nper	: number of compounding periods
+ pmt	: a (fixed) payment, paid either
+	  at the beginning (when = 1) or the end (when = 0) of each period
+ pv	: a present value
+ fv	: a future value
+ when 	: specification of whether payment is made
+	  at the beginning (when = 1) or the end (when = 0) of each period
+ maxIter 	: total number of iterations to perform calculation
+ tolerance 	: accept result only if the difference in iteration values is less than the tolerance provided
+ initialGuess 	: an initial point to start approximating from
+
+References:
+	[WRW] Wheeler, D. A., E. Rathke, and R. Weir (Eds.) (2009, May).
+	Open Document Format for Office Applications (OpenDocument)v1.2,
+	Part 2: Recalculated Formula (OpenFormula) Format - Annotated Version,
+	Pre-Draft 12. Organization for the Advancement of Structured Information
+	Standards (OASIS). Billerica, MA, USA. [ODT Document].
+	Available:
+	http://www.oasis-open.org/committees/documents.php?wg_abbrev=office-formula
+	OpenDocument-formula-20090508.odt
+*/
+func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxIter int64, tolerance, initialGuess decimal.Decimal) (decimal.Decimal, error) {
+	var nextIterRate, currentIterRate decimal.Decimal = initialGuess, initialGuess
+
+	for iter := int64(0); iter < maxIter; iter++ {
+		currentIterRate = nextIterRate
+		nextIterRate = currentIterRate.Sub(getRateRatio(pv, fv, pmt, currentIterRate, nper, when))
+		// skip further loops if |nextIterRate-currentIterRate| < tolerance
+		if nextIterRate.Sub(currentIterRate).Abs().LessThan(tolerance) {
+			break
+		}
+	}
+
+	if nextIterRate.Sub(currentIterRate).Abs().GreaterThanOrEqual(tolerance) {
+		return decimal.Zero, ErrTolerence
+	}
+	return nextIterRate, nil
+}

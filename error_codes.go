@@ -8,4 +8,5 @@ var (
 	ErrInvalidFrequency = errors.New("invalid frequency")
 	ErrNotEqual         = errors.New("input values are not equal")
 	ErrOutOfBounds      = errors.New("error in representing data as it is out of bounds")
+	ErrTolerence        = errors.New("nan error as tolerence level exceeded")
 )

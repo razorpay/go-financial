@@ -355,3 +355,70 @@ func Test_Nper(t *testing.T) {
 		})
 	}
 }
+
+func Test_Rate(t *testing.T) {
+	type args struct {
+		pv           decimal.Decimal
+		fv           decimal.Decimal
+		pmt          decimal.Decimal
+		nper         int64
+		when         paymentperiod.Type
+		maxIter      int64
+		tolerance    decimal.Decimal
+		initialGuess decimal.Decimal
+	}
+	tests := []struct {
+		name   string
+		args   args
+		want   decimal.Decimal
+		anyErr error
+	}{
+		{
+			name: "success", args: args{
+				pv:           decimal.NewFromInt(2000),
+				fv:           decimal.NewFromInt(-3000),
+				pmt:          decimal.NewFromInt(100),
+				nper:         4,
+				when:         paymentperiod.BEGINNING,
+				maxIter:      100,
+				tolerance:    decimal.NewFromFloat(1e-7),
+				initialGuess: decimal.NewFromFloat(0.1),
+			},
+			want:   decimal.NewFromFloat(0.06106257989825202),
+			anyErr: nil,
+		}, {
+			name: "success", args: args{
+				pv:           decimal.NewFromInt(-3000),
+				fv:           decimal.NewFromInt(1000),
+				pmt:          decimal.NewFromInt(500),
+				nper:         2,
+				when:         paymentperiod.BEGINNING,
+				maxIter:      100,
+				tolerance:    decimal.NewFromFloat(1e-7),
+				initialGuess: decimal.NewFromFloat(0.1),
+			},
+			want:   decimal.NewFromFloat(-0.25968757625671507),
+			anyErr: nil,
+		}, {
+			name: "failure", args: args{
+				pv:           decimal.NewFromInt(3000),
+				fv:           decimal.NewFromInt(1000),
+				pmt:          decimal.NewFromInt(100),
+				nper:         2,
+				when:         paymentperiod.BEGINNING,
+				maxIter:      100,
+				tolerance:    decimal.NewFromFloat(1e-7),
+				initialGuess: decimal.NewFromFloat(0.1),
+			},
+			want:   decimal.Zero,
+			anyErr: ErrTolerence,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, err := Rate(tt.args.pv, tt.args.fv, tt.args.pmt, tt.args.nper, tt.args.when, tt.args.maxIter, tt.args.tolerance, tt.args.initialGuess); err != tt.anyErr || isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)) != nil {
+				t.Errorf("Rate returned (%v,%v), wanted (%v,%v)", got, err, tt.want, tt.anyErr)
+			}
+		})
+	}
+}
