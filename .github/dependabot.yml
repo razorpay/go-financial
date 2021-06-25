@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: "/"
+    allow:
+    # Allow both direct and indirect updates for all packages
+      - dependency-type: "all"
+    schedule:
+      interval: daily
+    labels:
+      - "Gosecurity"
+  - package-ecosystem: docker
+    directory: "/"
+    allow:
+    # Allow both direct and indirect updates for all packages
+      - dependency-type: "all"
+    schedule:
+      interval: daily
+    labels:
+      - "Dockersecurity"
