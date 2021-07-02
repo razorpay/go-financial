@@ -8,7 +8,7 @@ updates:
     schedule:
       interval: daily
     labels:
-      - "Gosecurity"
+      - "dependencies"
   - package-ecosystem: docker
     directory: "/"
     allow:
@@ -17,4 +17,4 @@ updates:
     schedule:
       interval: daily
     labels:
-      - "Dockersecurity"
+      - "dependencies"
