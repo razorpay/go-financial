@@ -372,21 +372,34 @@ func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxI
 	return nextIterRate, nil
 }
 
-/*TODO -> Comments */
-func Irr(cashflow []decimal.Decimal, tolerance, prev_point, next_point decimal.Decimal) (decimal.Decimal, error) {
+/*
+IRR computes the rate of return for a balanced cashflow (if feasible!) using the secant method of approximation.
+
+Params:
+ values		: the value of the cash flow for that time period. Values provided here must be an array of float64
+ maxIter 	: total number of iterations for which the function should run
+ tolerance 	: accept result only if the difference in iteration values is less than the tolerance provided
+ prev_point	: an initial point to start approximating from
+ next_point	: next point to use for secant
+
+References:
+    [G] L. J. Gitman, "Principles of Managerial Finance, Brief," 3rd ed.,
+    Addison-Wesley, 2003, pg. 348.
+*/
+func Irr(values []decimal.Decimal, maxIter int64, tolerance, prev_point, next_point decimal.Decimal) (decimal.Decimal, error) {
 	x_p := prev_point
 	x_n := next_point
 
-	for i := 0; i < 100; i++ {
-		y_p := Npv(x_p, cashflow)
-		y_n := Npv(x_n, cashflow)
+	for i := int64(0); i < maxIter; i++ {
+		y_p := Npv(x_p, values)
+		y_n := Npv(x_n, values)
 		_v1 := x_n.Sub(x_p).Div(y_n.Sub(y_p).Add(decimal.NewFromFloat(0.0000001)))
 		_v2 := y_n.Neg().Mul(_v1)
 		x_n, x_p = x_n.Add(_v2), x_n
 
 	}
 
-	if Npv(x_n, cashflow).LessThan(tolerance) {
+	if Npv(x_n, values).LessThan(tolerance) {
 		return x_n, nil
 	}
 
