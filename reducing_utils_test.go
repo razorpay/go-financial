@@ -422,3 +422,11 @@ func Test_Rate(t *testing.T) {
 		})
 	}
 }
+
+// func Test_Irr(t *testing.T) {
+// 	t.Run("IRR", func(t *testing.T) {
+// 		cashFlow := []decimal.Decimal{decimal.NewFromFloat(1000), decimal.NewFromFloat(-900), decimal.NewFromFloat(-200)}
+// 		v1, v2 := Irr(cashFlow)
+// 		t.Logf("%v,%v", v1, v2)
+// 	})
+// }

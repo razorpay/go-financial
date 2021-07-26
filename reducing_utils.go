@@ -371,3 +371,24 @@ func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxI
 	}
 	return nextIterRate, nil
 }
+
+/*TODO -> Comments */
+func Irr(cashflow []decimal.Decimal, tolerance, prev_point, next_point decimal.Decimal) (decimal.Decimal, error) {
+	x_p := prev_point
+	x_n := next_point
+
+	for i := 0; i < 100; i++ {
+		y_p := Npv(x_p, cashflow)
+		y_n := Npv(x_n, cashflow)
+		_v1 := x_n.Sub(x_p).Div(y_n.Sub(y_p).Add(decimal.NewFromFloat(0.0000001)))
+		_v2 := y_n.Neg().Mul(_v1)
+		x_n, x_p = x_n.Add(_v2), x_n
+
+	}
+
+	if Npv(x_n, cashflow).LessThan(tolerance) {
+		return x_n, nil
+	}
+
+	return decimal.Zero, ErrOutOfBounds
+}
