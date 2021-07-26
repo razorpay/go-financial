@@ -673,8 +673,7 @@ package main
 
 import (
 	"fmt"
-	gofinancial "github.com/razorpay/go-financial"
-	"github.com/razorpay/go-financial/enums/paymentperiod"
+	gofinancial "github.com/razorpay/go-financial"	
 	"github.com/shopspring/decimal"
 )
 
@@ -695,4 +694,4 @@ func main() {
 	// irr: 0.05961637856732953787613704103503
 }
 ```
-[Run on go-playground](https://play.golang.org/p/H2uybe1dbRj)
+[Run on go-playground](https://play.golang.org/p/izqvtBWEOqJ)
