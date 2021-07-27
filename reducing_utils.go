@@ -407,5 +407,4 @@ func Mirr(cashflows []decimal.Decimal, financeRate, reinvestRate decimal.Decimal
 
 	_mirr := decimal.NewFromFloat(_x3).Sub(one)
 	return _mirr
-
 }
