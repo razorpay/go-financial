@@ -371,3 +371,41 @@ func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxI
 	}
 	return nextIterRate, nil
 }
+
+/*
+Mirr calculates the Modified internal rate of return for a given cashflow and finance and reinvestment rates
+
+Params:
+ cashflows: periodic chasflow statement
+ financeRate: interest rate for inflows
+ reinvestRate: interst received for reinvesting outflows
+*/
+func Mirr(cashflows []decimal.Decimal, financeRate, reinvestRate decimal.Decimal) decimal.Decimal {
+	var inflow, outflow []decimal.Decimal
+
+	for _, v := range cashflows {
+		if v.IsNegative() {
+			inflow = append(inflow, v)
+			outflow = append(outflow, decimal.Zero)
+		}
+		if v.IsPositive() {
+			outflow = append(outflow, v)
+			inflow = append(inflow, decimal.Zero)
+		}
+	}
+
+	one := decimal.NewFromFloat(1)
+	n_1 := decimal.NewFromInt(int64(len(cashflows) - 1))
+	_pv := Npv(financeRate, inflow)
+	_fv := Npv(reinvestRate, outflow).Mul(one.Add(reinvestRate).Pow(n_1))
+
+	// ! shopspring decimal struct based underroot is imprecise (hence math library)
+	_x1 := _fv.Div(_pv.Neg())
+	_go_x1, _ := _x1.Float64()
+	_go_x2, _ := one.Div(n_1).Float64()
+	_x3 := math.Pow(_go_x1, _go_x2)
+
+	_mirr := decimal.NewFromFloat(_x3).Sub(one)
+	return _mirr
+
+}

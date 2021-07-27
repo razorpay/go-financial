@@ -24,7 +24,7 @@ which are as follows:
 | rate                         |  ✅   |    Computes the rate of interest per period|
 | irr                          |      |    Computes the internal rate of return|
 | npv                          |  ✅   |   Computes the net present value of a series of cash flow|
-| mirr                         |      |    Computes the modified internal rate of return|
+| mirr                         |  ✅   |    Computes the modified internal rate of return|
   
 # Index  
 While the numpy-financial package contains a set of elementary financial functions, this pkg also contains some helper functions on top of it. Their usage and description can be found below:  
@@ -49,6 +49,8 @@ While the numpy-financial package contains a set of elementary financial functio
     + [Example(Nper-Loan)](#examplenper-loan)
   * [Rate(Interest Rate)](#rate)
 	+ [Example(Rate-Investment)](#examplerate-investment)
+  * [Mirr(Modified irr)](#mirr)
+	+ [Example(Mirr)](#examplemirr)
  
  Detailed documentation is available at [godoc](https://godoc.org/github.com/razorpay/go-financial).
 ## Amortisation(Generate Table)  
@@ -638,3 +640,7 @@ func main() {
 }
 ```
 [Run on go-playground](https://play.golang.org/p/H2uybe1dbRj)
+
+## Mirr
+
+### Example(Mirr)

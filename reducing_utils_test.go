@@ -422,3 +422,41 @@ func Test_Rate(t *testing.T) {
 		})
 	}
 }
+
+func Test_Mirr(t *testing.T) {
+	type args struct {
+		cashflow     []decimal.Decimal
+		financeRate  decimal.Decimal
+		reinvestRate decimal.Decimal
+	}
+	tests := []struct {
+		name string
+		args args
+		want decimal.Decimal
+	}{
+		{
+			name: "success", args: args{
+				cashflow:     []decimal.Decimal{decimal.NewFromInt(-1000), decimal.NewFromInt(-4000), decimal.NewFromInt(5000), decimal.NewFromInt(2000)},
+				financeRate:  decimal.NewFromFloat(0.1),
+				reinvestRate: decimal.NewFromFloat(0.12),
+			},
+			want: decimal.NewFromFloat(0.1790856860),
+		},
+		{
+			name: "success", args: args{
+				cashflow:     []decimal.Decimal{decimal.NewFromInt(-2000), decimal.NewFromInt(2000), decimal.NewFromInt(2000)},
+				financeRate:  decimal.NewFromFloat(0.3),
+				reinvestRate: decimal.NewFromFloat(0.1),
+			},
+			want: decimal.NewFromFloat(0.4491376746),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res := Mirr(tt.args.cashflow, tt.args.financeRate, tt.args.reinvestRate); isAlmostEqual(res, tt.want, decimal.NewFromFloat(precision)) != nil {
+				t.Errorf("Mirr returned (%v), wanted (%v)", res, tt.want)
+			}
+		})
+	}
+}
