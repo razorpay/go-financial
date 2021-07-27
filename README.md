@@ -643,4 +643,45 @@ func main() {
 
 ## Mirr
 
+```go  
+func Mirr(cashflows []decimal.Decimal, financeRate, reinvestRate decimal.Decimal) decimal.Decimal
+```
+
+Params:  
+```text
+ cashflows: periodic chasflow statement
+ financeRate: interest rate for inflows
+ reinvestRate: interst received for reinvesting outflows
+``` 
+
+Returns:
+```text
+mirr    : a value for the corresponding mirr
+```
+
+Mirr calculates the Modified internal rate of return for a given cashflow and finance and reinvestment rates
+
 ### Example(Mirr)
+
+```go
+package main
+
+import (
+	"fmt"
+	gofinancial "github.com/razorpay/go-financial"
+	"github.com/shopspring/decimal"
+)
+
+func main() {
+	cashflow := []decimal.Decimal{decimal.NewFromInt(-1000), decimal.NewFromInt(-4000), decimal.NewFromInt(5000), decimal.NewFromInt(2000)}
+	financeRate :=  decimal.NewFromFloat(0.1)
+	reinvestRate := decimal.NewFromFloat(0.12)
+
+	mirr := gofinancial.Mirr(cashflow,financeRate,reinvestRate)
+
+	fmt.Printf("mirr: %v",mirr)
+	// Output:
+	// mirr: 0.1790856860348926
+}
+```
+[Run on go-playground](https://play.golang.org/p/ci6pBUkX4jy)
