@@ -425,11 +425,11 @@ func Test_Rate(t *testing.T) {
 
 func Test_Irr(t *testing.T) {
 	type args struct {
-		cashFlow   []decimal.Decimal
-		maxIter    int64
-		tolerance  decimal.Decimal
-		prev_point decimal.Decimal
-		next_point decimal.Decimal
+		cashFlow  []decimal.Decimal
+		maxIter   int64
+		tolerance decimal.Decimal
+		prevPoint decimal.Decimal
+		nextPoint decimal.Decimal
 	}
 	tests := []struct {
 		name   string
@@ -440,11 +440,11 @@ func Test_Irr(t *testing.T) {
 		{
 			name: "success",
 			args: args{
-				cashFlow:   []decimal.Decimal{decimal.NewFromFloat(1000), decimal.NewFromFloat(-900), decimal.NewFromFloat(200), decimal.NewFromFloat(-400)},
-				maxIter:    100,
-				tolerance:  decimal.NewFromFloat(1e-6),
-				prev_point: decimal.NewFromFloat(0.1),
-				next_point: decimal.NewFromFloat(0.2),
+				cashFlow:  []decimal.Decimal{decimal.NewFromFloat(1000), decimal.NewFromFloat(-900), decimal.NewFromFloat(200), decimal.NewFromFloat(-400)},
+				maxIter:   100,
+				tolerance: decimal.NewFromFloat(1e-6),
+				prevPoint: decimal.NewFromFloat(0.1),
+				nextPoint: decimal.NewFromFloat(0.2),
 			},
 			want:   decimal.NewFromFloat(0.06491271005017),
 			anyErr: nil,
@@ -452,11 +452,11 @@ func Test_Irr(t *testing.T) {
 		{
 			name: "success",
 			args: args{
-				cashFlow:   []decimal.Decimal{decimal.NewFromFloat(-123400), decimal.NewFromFloat(36200), decimal.NewFromFloat(54800), decimal.NewFromFloat(48100)},
-				maxIter:    100,
-				tolerance:  decimal.NewFromFloat(1e-6),
-				prev_point: decimal.NewFromFloat(0.1),
-				next_point: decimal.NewFromFloat(0.2),
+				cashFlow:  []decimal.Decimal{decimal.NewFromFloat(-123400), decimal.NewFromFloat(36200), decimal.NewFromFloat(54800), decimal.NewFromFloat(48100)},
+				maxIter:   100,
+				tolerance: decimal.NewFromFloat(1e-6),
+				prevPoint: decimal.NewFromFloat(0.1),
+				nextPoint: decimal.NewFromFloat(0.2),
 			},
 			want:   decimal.NewFromFloat(0.0596163785673),
 			anyErr: nil,
@@ -464,11 +464,11 @@ func Test_Irr(t *testing.T) {
 		{
 			name: "failure",
 			args: args{
-				cashFlow:   []decimal.Decimal{decimal.NewFromFloat(1000), decimal.NewFromFloat(-900), decimal.NewFromFloat(200)},
-				maxIter:    100,
-				tolerance:  decimal.NewFromFloat(1e-6),
-				prev_point: decimal.NewFromFloat(0.1),
-				next_point: decimal.NewFromFloat(0.2),
+				cashFlow:  []decimal.Decimal{decimal.NewFromFloat(1000), decimal.NewFromFloat(-900), decimal.NewFromFloat(200)},
+				maxIter:   100,
+				tolerance: decimal.NewFromFloat(1e-6),
+				prevPoint: decimal.NewFromFloat(0.1),
+				nextPoint: decimal.NewFromFloat(0.2),
 			},
 			want:   decimal.Zero,
 			anyErr: ErrOutOfBounds,
@@ -477,7 +477,7 @@ func Test_Irr(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got, err := Irr(tt.args.cashFlow, tt.args.maxIter, tt.args.tolerance, tt.args.prev_point, tt.args.next_point); err != tt.anyErr || isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)) != nil {
+			if got, err := Irr(tt.args.cashFlow, tt.args.maxIter, tt.args.tolerance, tt.args.prevPoint, tt.args.nextPoint); err != tt.anyErr || isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)) != nil {
 				t.Errorf("IRR returned (%v,%v), wanted (%v,%v)", got, err, tt.want, tt.anyErr)
 			}
 		})

@@ -379,17 +379,18 @@ Params:
  values		: the value of the cash flow for that time period. Values provided here must be an array of float64
  maxIter 	: total number of iterations for which the function should run
  tolerance 	: accept result only if the difference in iteration values is less than the tolerance provided
- prev_point	: an initial point to start approximating from
- next_point	: next point to use for secant
+ prevPoint	: an initial point to start approximating from
+ nextPoint	: next point to use for secant
 
 References:
     [G] L. J. Gitman, "Principles of Managerial Finance, Brief," 3rd ed.,
     Addison-Wesley, 2003, pg. 348.
 */
-func Irr(values []decimal.Decimal, maxIter int64, tolerance, prev_point, next_point decimal.Decimal) (decimal.Decimal, error) {
-	x_p := prev_point
-	x_n := next_point
+func Irr(values []decimal.Decimal, maxIter int64, tolerance, prevPoint, nextPoint decimal.Decimal) (decimal.Decimal, error) {
+	x_p := prevPoint
+	x_n := nextPoint
 
+	// https://en.wikipedia.org/wiki/Secant_method
 	for i := int64(0); i < maxIter; i++ {
 		y_p := Npv(x_p, values)
 		y_n := Npv(x_n, values)
