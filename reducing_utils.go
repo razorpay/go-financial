@@ -376,14 +376,14 @@ func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxI
 Mirr calculates the Modified internal rate of return for a given cashflow and finance and reinvestment rates
 
 Params:
- cashflows	: periodic chasflow statement
+ cashFlows	: periodic chasflow statement
  financeRate	: interest rate for inflows
  reinvestRate	: interst received for reinvesting outflows
 */
-func Mirr(cashflows []decimal.Decimal, financeRate, reinvestRate decimal.Decimal) decimal.Decimal {
+func Mirr(cashFlows []decimal.Decimal, financeRate, reinvestRate decimal.Decimal) decimal.Decimal {
 	var inflow, outflow []decimal.Decimal
 
-	for _, v := range cashflows {
+	for _, v := range cashFlows {
 		if v.IsNegative() {
 			inflow = append(inflow, v)
 			outflow = append(outflow, decimal.Zero)
@@ -395,7 +395,7 @@ func Mirr(cashflows []decimal.Decimal, financeRate, reinvestRate decimal.Decimal
 	}
 
 	one := decimal.NewFromFloat(1)
-	n_1 := decimal.NewFromInt(int64(len(cashflows) - 1))
+	n_1 := decimal.NewFromInt(int64(len(cashFlows) - 1))
 	_pv := Npv(financeRate, inflow)
 	_fv := Npv(reinvestRate, outflow).Mul(one.Add(reinvestRate).Pow(n_1))
 
