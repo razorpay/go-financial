@@ -387,21 +387,21 @@ References:
     Addison-Wesley, 2003, pg. 348.
 */
 func Irr(values []decimal.Decimal, maxIter int64, tolerance, prevPoint, nextPoint decimal.Decimal) (decimal.Decimal, error) {
-	x_p := prevPoint
-	x_n := nextPoint
+	xP := prevPoint
+	xN := nextPoint
 
 	// https://en.wikipedia.org/wiki/Secant_method
 	for i := int64(0); i < maxIter; i++ {
-		y_p := Npv(x_p, values)
-		y_n := Npv(x_n, values)
-		_v1 := x_n.Sub(x_p).Div(y_n.Sub(y_p).Add(decimal.NewFromFloat(0.0000001)))
-		_v2 := y_n.Neg().Mul(_v1)
-		x_n, x_p = x_n.Add(_v2), x_n
+		yP := Npv(xP, values)
+		yN := Npv(xN, values)
+		_v1 := xN.Sub(xP).Div(yN.Sub(yP).Add(decimal.NewFromFloat(0.0000001)))
+		_v2 := yN.Neg().Mul(_v1)
+		xN, xP = xN.Add(_v2), xN
 
 	}
 
-	if Npv(x_n, values).LessThan(tolerance) {
-		return x_n, nil
+	if Npv(xN, values).LessThan(tolerance) {
+		return xN, nil
 	}
 
 	return decimal.Zero, ErrOutOfBounds
