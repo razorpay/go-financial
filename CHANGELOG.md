@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [UNRELEASED][unreleased]
 
+## [1.1.0][1.1.0]
+
+### Added
+* Rate function
+* Dependabot support
+
+### Fixed
+* Func definition in readme
+
 ## [1.0.0][1.0.0]
 
 ### Added
@@ -37,3 +46,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [0.1.0]: https://github.com/razorpay/go-financial/releases/tag/v0.1.0
 [0.2.0]: https://github.com/razorpay/go-financial/releases/tag/v0.2.0
 [1.0.0]: https://github.com/razorpay/go-financial/releases/tag/v1.0.0
+[1.1.0]: https://github.com/razorpay/go-financial/releases/tag/v1.1.0
