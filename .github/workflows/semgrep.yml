@@ -1,8 +1,6 @@
 name: Semgrep
 on:
   pull_request: {}
-  schedule:
-    - cron: '30 20 * * *'
 jobs:
   semgrep:
     name: Scan
