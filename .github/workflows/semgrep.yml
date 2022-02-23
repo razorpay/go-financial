@@ -1,0 +1,13 @@
+name: Semgrep
+on:
+  pull_request: {}
+jobs:
+  semgrep:
+    name: Scan
+    runs-on: [ubuntu-latest]            # nosemgrep : semgrep.dev/s/swati31196:github_provided_runner
+    if: (github.actor != 'dependabot[bot]')
+    steps:
+      - uses: actions/checkout@v2
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
