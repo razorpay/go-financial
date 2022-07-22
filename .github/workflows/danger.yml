@@ -1,0 +1,24 @@
+# Danger: automating your team's conventions surrounding code review
+# More info in Readme
+name: Danger CI
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  Danger:
+    name: Run Danger JS
+    runs-on: [self-hosted]
+    env:
+      # As Danger uses a bot to put comments on your pr you need to
+      # use `secrets.GITHUB_TOKEN` (Personal Access Token) to provide write access to bot.
+      DANGER_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      DANGER_DISABLE_TRANSPILATION: "true"
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v2
+
+      - name: Danger
+        uses: danger/danger-js@9.1.8
