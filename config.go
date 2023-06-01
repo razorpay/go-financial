@@ -108,11 +108,10 @@ func getStartDate(date time.Time, freq frequency.Type, index int) (time.Time, er
 
 func getMonthsBetweenDates(start time.Time, end time.Time) (*int, error) {
 	count := 0
-	for start.Before(end) {
-		start = start.AddDate(0, 1, 0)
+	for start.AddDate(0, count, 0).Before(end) {
 		count++
 	}
-	finalDate := start.AddDate(0, 0, -1)
+	finalDate := start.AddDate(0, count, -1)
 	if !finalDate.Equal(end) {
 		return nil, ErrUnevenEndDate
 	}
@@ -121,11 +120,10 @@ func getMonthsBetweenDates(start time.Time, end time.Time) (*int, error) {
 
 func getYearsBetweenDates(start time.Time, end time.Time) (*int, error) {
 	count := 0
-	for start.Before(end) {
-		start = start.AddDate(1, 0, 0)
+	for start.AddDate(count, 0, 0).Before(end) {
 		count++
 	}
-	finalDate := start.AddDate(0, 0, -1)
+	finalDate := start.AddDate(count, 0, -1)
 	if !finalDate.Equal(end) {
 		return nil, ErrUnevenEndDate
 	}
