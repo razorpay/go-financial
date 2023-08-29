@@ -422,3 +422,103 @@ func Test_Rate(t *testing.T) {
 		})
 	}
 }
+
+func Test_Irr(t *testing.T) {
+	type args struct {
+		cashFlow  []decimal.Decimal
+		maxIter   int64
+		tolerance decimal.Decimal
+		prevPoint decimal.Decimal
+		nextPoint decimal.Decimal
+	}
+	tests := []struct {
+		name   string
+		args   args
+		want   decimal.Decimal
+		anyErr error
+	}{
+		{
+			name: "success",
+			args: args{
+				cashFlow:  []decimal.Decimal{decimal.NewFromFloat(1000), decimal.NewFromFloat(-900), decimal.NewFromFloat(200), decimal.NewFromFloat(-400)},
+				maxIter:   100,
+				tolerance: decimal.NewFromFloat(1e-6),
+				prevPoint: decimal.NewFromFloat(0.1),
+				nextPoint: decimal.NewFromFloat(0.2),
+			},
+			want:   decimal.NewFromFloat(0.06491271005017),
+			anyErr: nil,
+		},
+		{
+			name: "success",
+			args: args{
+				cashFlow:  []decimal.Decimal{decimal.NewFromFloat(-123400), decimal.NewFromFloat(36200), decimal.NewFromFloat(54800), decimal.NewFromFloat(48100)},
+				maxIter:   100,
+				tolerance: decimal.NewFromFloat(1e-6),
+				prevPoint: decimal.NewFromFloat(0.1),
+				nextPoint: decimal.NewFromFloat(0.2),
+			},
+			want:   decimal.NewFromFloat(0.0596163785673),
+			anyErr: nil,
+		},
+		{
+			name: "failure",
+			args: args{
+				cashFlow:  []decimal.Decimal{decimal.NewFromFloat(1000), decimal.NewFromFloat(-900), decimal.NewFromFloat(200)},
+				maxIter:   100,
+				tolerance: decimal.NewFromFloat(1e-6),
+				prevPoint: decimal.NewFromFloat(0.1),
+				nextPoint: decimal.NewFromFloat(0.2),
+			},
+			want:   decimal.Zero,
+			anyErr: ErrOutOfBounds,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, err := Irr(tt.args.cashFlow, tt.args.maxIter, tt.args.tolerance, tt.args.prevPoint, tt.args.nextPoint); err != tt.anyErr || isAlmostEqual(got, tt.want, decimal.NewFromFloat(precision)) != nil {
+				t.Errorf("IRR returned (%v,%v), wanted (%v,%v)", got, err, tt.want, tt.anyErr)
+			}
+		})
+	}
+}
+
+func Test_Mirr(t *testing.T) {
+	type args struct {
+		cashFlows    []decimal.Decimal
+		financeRate  decimal.Decimal
+		reinvestRate decimal.Decimal
+	}
+	tests := []struct {
+		name string
+		args args
+		want decimal.Decimal
+	}{
+		{
+			name: "success", args: args{
+				cashFlows:    []decimal.Decimal{decimal.NewFromInt(-1000), decimal.NewFromInt(-4000), decimal.NewFromInt(5000), decimal.NewFromInt(2000)},
+				financeRate:  decimal.NewFromFloat(0.1),
+				reinvestRate: decimal.NewFromFloat(0.12),
+			},
+			want: decimal.NewFromFloat(0.1790856860),
+		},
+		{
+			name: "success", args: args{
+				cashFlows:    []decimal.Decimal{decimal.NewFromInt(-2000), decimal.NewFromInt(2000), decimal.NewFromInt(2000)},
+				financeRate:  decimal.NewFromFloat(0.3),
+				reinvestRate: decimal.NewFromFloat(0.1),
+			},
+			want: decimal.NewFromFloat(0.4491376746),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if res := Mirr(tt.args.cashFlows, tt.args.financeRate, tt.args.reinvestRate); isAlmostEqual(res, tt.want, decimal.NewFromFloat(precision)) != nil {
+				t.Errorf("Mirr returned (%v), wanted (%v)", res, tt.want)
+			}
+		})
+	}
+}
+
