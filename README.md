@@ -22,7 +22,7 @@ which are as follows:
 | nper                         |  ✅   |    Computes the number of periodic payments|
 | pv                           |  ✅   |   Computes the present value of a payment|
 | rate                         |  ✅   |    Computes the rate of interest per period|
-| irr                          |      |    Computes the internal rate of return|
+| irr                          |  ✅   |    Computes the internal rate of return|
 | npv                          |  ✅   |   Computes the net present value of a series of cash flow|
 | mirr                         |  ✅   |    Computes the modified internal rate of return|
   
@@ -49,6 +49,8 @@ While the numpy-financial package contains a set of elementary financial functio
     + [Example(Nper-Loan)](#examplenper-loan)
   * [Rate(Interest Rate)](#rate)
 	+ [Example(Rate-Investment)](#examplerate-investment)
+  * [Irr(Internal Rate of Return)](#irr)
+	+ [Example(Irr)](#exampleirr)
   * [Mirr(Modified irr)](#mirr)
 	+ [Example(Mirr)](#examplemirr)
  
@@ -641,6 +643,61 @@ func main() {
 ```
 [Run on go-playground](https://play.golang.org/p/H2uybe1dbRj)
 
+## Irr  
+
+```go
+func Irr(values []decimal.Decimal, maxIter int64, tolerance, prev_point, next_point decimal.Decimal) (decimal.Decimal, error)
+```
+
+Params:  
+```text
+values		: the value of the cash flow for that time period. Values provided here must be an array of float64
+maxIter 	: total number of iterations for which the function should run
+tolerance 	: accept result only if the difference in iteration values is less than the tolerance provided
+prev_point	: an initial point to start approximating from
+next_point	: next point to use for secant
+``` 
+
+Returns:
+```text
+rate    : a rate for the corresponding values
+error   : returns nil if NPV is close to zero (returns an error conversely)
+```
+
+Irr computes the rate to ensure a net zero cashflow
+
+### Example(Irr)
+
+If an initial inflow of $123400 is done followed by successive outflows of $36200, $54800 and $48100; for what value of rate does the npv evalute to zero ? (assuming 100 iterations, 1e-6 threshold and 0.1 and 0.2 as initial guessing points)
+
+```go
+package main
+
+import (
+	"fmt"
+	gofinancial "github.com/razorpay/go-financial"
+	"github.com/shopspring/decimal"
+)
+
+func main() {
+	cashflow := []decimal.Decimal{decimal.NewFromFloat(-123400), decimal.NewFromFloat(36200), decimal.NewFromFloat(54800), decimal.NewFromFloat(48100)}
+	maxIter := 100
+	tolerance := decimal.NewFromFloat(1e-6)
+	prev_point := decimal.NewFromFloat(0.1)
+	next_point := decimal.NewFromFloat(0.2)
+
+	irr, err := gofinancial.Irr(cashflow, maxIter, tolerance, prev_point, next_point)
+	if err != nil {
+		fmt.Printf(err)
+	} else {
+		fmt.Printf("irr: %v ", irr)
+	}
+	// Output:
+	// irr: 0.05961637856732953787613704103503
+}
+```
+[Run on go-playground](https://play.golang.org/p/izqvtBWEOqJ)
+
 ## Mirr
 
 ```go  
@@ -652,7 +709,7 @@ Params:
  cashflows: periodic chasflow statement
  financeRate: interest rate for inflows
  reinvestRate: interst received for reinvesting outflows
-``` 
+```
 
 Returns:
 ```text
@@ -662,6 +719,7 @@ mirr    : a value for the corresponding mirr
 Mirr calculates the Modified internal rate of return for a given cashflow and finance and reinvestment rates
 
 ### Example(Mirr)
+
 
 ```go
 package main

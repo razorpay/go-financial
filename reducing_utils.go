@@ -373,6 +373,41 @@ func Rate(pv, fv, pmt decimal.Decimal, nper int64, when paymentperiod.Type, maxI
 }
 
 /*
+IRR computes the rate of return for a balanced cashflow (if feasible!) using the secant method of approximation.
+
+Params:
+ values		: the value of the cash flow for that time period. Values provided here must be an array of float64
+ maxIter 	: total number of iterations for which the function should run
+ tolerance 	: accept result only if the difference in iteration values is less than the tolerance provided
+ prevPoint	: an initial point to start approximating from
+ nextPoint	: next point to use for secant
+
+References:
+    [G] L. J. Gitman, "Principles of Managerial Finance, Brief," 3rd ed.,
+    Addison-Wesley, 2003, pg. 348.
+*/
+func Irr(values []decimal.Decimal, maxIter int64, tolerance, prevPoint, nextPoint decimal.Decimal) (decimal.Decimal, error) {
+	xP := prevPoint
+	xN := nextPoint
+
+	// https://en.wikipedia.org/wiki/Secant_method
+	for i := int64(0); i < maxIter; i++ {
+		yP := Npv(xP, values)
+		yN := Npv(xN, values)
+		_v1 := xN.Sub(xP).Div(yN.Sub(yP).Add(decimal.NewFromFloat(0.0000001)))
+		_v2 := yN.Neg().Mul(_v1)
+		xN, xP = xN.Add(_v2), xN
+
+	}
+
+	if Npv(xN, values).LessThan(tolerance) {
+		return xN, nil
+	}
+
+	return decimal.Zero, ErrOutOfBounds
+}
+
+/*
 Mirr calculates the Modified internal rate of return for a given cashflow and finance and reinvestment rates
 
 Params:
