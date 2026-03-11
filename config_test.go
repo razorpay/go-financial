@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
+
 	Frequency "github.com/razorpay/go-financial/enums/frequency"
 )
 
@@ -228,4 +230,46 @@ func areDatesEqual(actualStartDates []time.Time, actualEndDates []time.Time, exp
 
 func getDate(y int, m int, d int) time.Time {
 	return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC)
+}
+
+
+func TestConfig_Validate(t *testing.T) {
+	tests := []struct {
+		name    string
+		config  Config
+		wantErr bool
+	}{
+		{
+			name: "valid config",
+			config: Config{
+				AmountBorrowed: decimal.NewFromInt(100000),
+				Interest:       decimal.NewFromInt(1200),
+			},
+			wantErr: false,
+		},
+		{
+			name: "zero amount borrowed",
+			config: Config{
+				AmountBorrowed: decimal.Zero,
+				Interest:       decimal.NewFromInt(1200),
+			},
+			wantErr: true,
+		},
+		{
+			name: "negative interest",
+			config: Config{
+				AmountBorrowed: decimal.NewFromInt(100000),
+				Interest:       decimal.NewFromInt(-100),
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.config.Validate()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }
