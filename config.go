@@ -1,6 +1,7 @@
 package gofinancial
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/shopspring/decimal"
@@ -27,6 +28,18 @@ type Config struct {
 	periods                int64              // derived
 	startDates             []time.Time        // derived
 	endDates               []time.Time        // derived
+}
+
+
+// Validate checks Config fields for obviously invalid values before processing.
+func (c *Config) Validate() error {
+	if c.AmountBorrowed.LessThanOrEqual(decimal.Zero) {
+		return fmt.Errorf("amount borrowed must be positive, got %s", c.AmountBorrowed.String())
+	}
+	if c.Interest.LessThan(decimal.Zero) {
+		return fmt.Errorf("interest must be non-negative, got %s", c.Interest.String())
+	}
+	return nil
 }
 
 func (c *Config) setPeriodsAndDates() error {

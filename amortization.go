@@ -103,9 +103,9 @@ func DoPrincipalAdjustmentDueToRounding(finalRow *Row, rows []Row, principal dec
 // the difference is adjusted against the interest.
 func sanityCheckUpdate(row *Row, tolerance decimal.Decimal) error {
 	if !row.Payment.Equal(row.Principal.Add(row.Interest)) {
-		diff := row.Payment.Abs().Sub(row.Principal.Add(row.Interest).Abs())
-		if diff.LessThanOrEqual(tolerance) {
-			row.Interest = row.Interest.Sub(diff)
+		diff := row.Payment.Sub(row.Principal.Add(row.Interest))
+		if diff.Abs().LessThanOrEqual(tolerance) {
+			row.Interest = row.Interest.Add(diff)
 		} else {
 			return ErrPayment
 		}
