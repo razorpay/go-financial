@@ -7,6 +7,9 @@ type Flat struct{}
 
 // GetPrincipal returns principal amount contribution in a given period towards a loan, depending on config.
 func (f *Flat) GetPrincipal(config Config, _ int64) decimal.Decimal {
+	if config.periods == 0 {
+		return decimal.Zero
+	}
 	dPeriod := decimal.NewFromInt(config.periods)
 	minusOne := decimal.NewFromInt(-1)
 	return config.AmountBorrowed.Div(dPeriod).Mul(minusOne)
@@ -20,6 +23,9 @@ func (f *Flat) GetInterest(config Config, period int64) decimal.Decimal {
 
 // GetPayment returns the periodic payment to be done for a loan depending on config.
 func (f *Flat) GetPayment(config Config) decimal.Decimal {
+	if config.periods == 0 {
+		return decimal.Zero
+	}
 	dPeriod := decimal.NewFromInt(config.periods)
 	minusOne := decimal.NewFromInt(-1)
 	totalInterest := config.getInterestRatePerPeriodInDecimal().Mul(dPeriod).Mul(config.AmountBorrowed)

@@ -18,5 +18,9 @@ var toValue = map[Type]int{
 }
 
 func (t *Type) Value() int {
-	return toValue[*t]
+	v, ok := toValue[*t]
+	if !ok {
+		return 1 // safe default to avoid division by zero
+	}
+	return v
 }

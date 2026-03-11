@@ -168,6 +168,12 @@ func Nper(rate decimal.Decimal, pmt decimal.Decimal, pv decimal.Decimal, fv deci
 			err = fmt.Errorf("%w: %v", ErrOutOfBounds, r)
 		}
 	}()
+	if rate.Equal(decimal.Zero) {
+		if pmt.Equal(decimal.Zero) {
+			return decimal.Zero, fmt.Errorf("%w: payment is zero with zero rate", ErrOutOfBounds)
+		}
+		return fv.Add(pv).Neg().Div(pmt), nil
+	}
 	one := decimal.NewFromInt(1)
 	minusOne := decimal.NewFromInt(-1)
 	dWhen := decimal.NewFromInt(when.Value())
@@ -177,6 +183,9 @@ func Nper(rate decimal.Decimal, pmt decimal.Decimal, pv decimal.Decimal, fv deci
 	denominator := one.Add(rate)
 	floatNumerator, _ := numerator.BigFloat().Float64()
 	floatDenominator, _ := denominator.BigFloat().Float64()
+	if floatNumerator <= 0 || floatDenominator <= 0 {
+		return decimal.Zero, fmt.Errorf("%w: cannot compute log of non-positive value", ErrOutOfBounds)
+	}
 	logNumerator := math.Log(floatNumerator)
 	logDenominator := math.Log(floatDenominator)
 	dlogDenominator := decimal.NewFromFloat(logDenominator)
@@ -214,6 +223,9 @@ References:
 	OpenDocument-formula-20090508.odt
 */
 func Fv(rate decimal.Decimal, nper int64, pmt decimal.Decimal, pv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
+	if rate.Equal(decimal.Zero) {
+		return pmt.Mul(decimal.NewFromInt(nper)).Neg().Sub(pv)
+	}
 	one := decimal.NewFromInt(1)
 	minusOne := decimal.NewFromInt(-1)
 	dWhen := decimal.NewFromInt(when.Value())
@@ -256,6 +268,9 @@ References:
 	OpenDocument-formula-20090508.odt
 */
 func Pv(rate decimal.Decimal, nper int64, pmt decimal.Decimal, fv decimal.Decimal, when paymentperiod.Type) decimal.Decimal {
+	if rate.Equal(decimal.Zero) {
+		return pmt.Mul(decimal.NewFromInt(nper)).Neg().Sub(fv)
+	}
 	one := decimal.NewFromInt(1)
 	minusOne := decimal.NewFromInt(-1)
 	dWhen := decimal.NewFromInt(when.Value())
@@ -325,6 +340,9 @@ func getRateRatio(pv, fv, pmt, curRate decimal.Decimal, nper int64, when payment
 	derivative := derivativeP0.Add(derivativeP1).Add(derivativeP2)
 	// derivative := (float64(nper) * f1 * pv) + (pmt * ((when.Value() * (f0 - 1) / curRate) + ((1.0 + curRate*when.Value()) * ((curRate*float64(nper)*f1 - f0 + 1) / (curRate * curRate)))))
 
+	if derivative.Equal(decimal.Zero) {
+		return decimal.Zero
+	}
 	return y.Div(derivative)
 }
 
