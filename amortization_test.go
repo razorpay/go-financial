@@ -128,8 +128,8 @@ func verifyRow(t *testing.T, actual Row, expected Row) error {
 }
 
 func isAlmostEqual(first decimal.Decimal, second decimal.Decimal, tolerance decimal.Decimal) error {
-	diff := first.Abs().Sub(second.Abs())
-	if diff.Abs().LessThanOrEqual(tolerance) {
+	diff := first.Sub(second).Abs()
+	if diff.LessThanOrEqual(tolerance) {
 		return nil
 	} else {
 		return fmt.Errorf("%s is not equal to %s with %s tolerance", first.String(), second.String(), tolerance.String())

@@ -29,10 +29,10 @@ func Test_Pmt(t *testing.T) {
 			"bigDecimal case. would give nan if it were float64.", args{decimal.NewFromFloat(12), 400, decimal.NewFromInt(10000), decimal.NewFromInt(5000), paymentperiod.BEGINNING}, decimal.NewFromFloat(-9230.7692307692307692),
 		},
 		{
-			"24% p.a., monthly basis, 2 yrs", args{decimal.NewFromFloat(0.24 / 12), 12 * 2, decimal.NewFromInt(1000000), decimal.NewFromInt(0), 0}, decimal.NewFromFloat(-52871.097253249915),
+			"24% p.a., monthly basis, 2 yrs", args{decimal.NewFromFloat(0.24 / 12), 12 * 2, decimal.NewFromInt(1000000), decimal.NewFromInt(0), paymentperiod.ENDING}, decimal.NewFromFloat(-52871.097253249915),
 		},
 		{
-			"8% p.a., monthly basis, 5 yrs", args{decimal.NewFromFloat(0.08 / 12), 12 * 5, decimal.NewFromInt(15000), decimal.NewFromInt(0), 0}, decimal.NewFromFloat(-304.1459143262052370338701494),
+			"8% p.a., monthly basis, 5 yrs", args{decimal.NewFromFloat(0.08 / 12), 12 * 5, decimal.NewFromInt(15000), decimal.NewFromInt(0), paymentperiod.ENDING}, decimal.NewFromFloat(-304.1459143262052370338701494),
 		},
 		{
 			"0%p.a. , monthly basis, 15 yrs", args{decimal.Zero, 15 * 12, decimal.NewFromInt(200000), decimal.Zero, paymentperiod.ENDING}, decimal.NewFromFloat(-1111.111111111111),
@@ -70,6 +70,16 @@ func Test_Fv(t *testing.T) {
 				when: paymentperiod.ENDING,
 			},
 			want: decimal.NewFromFloat(15692.928894335893),
+		},
+		{
+			name: "zero rate should not panic", args: args{
+				rate: decimal.Zero,
+				nper: 12,
+				pmt:  decimal.NewFromInt(-100),
+				pv:   decimal.Zero,
+				when: paymentperiod.ENDING,
+			},
+			want: decimal.NewFromInt(1200),
 		},
 	}
 	for _, tt := range tests {
@@ -262,6 +272,16 @@ func Test_Pv(t *testing.T) {
 			},
 			want: decimal.NewFromFloat(2384.1091906934976),
 		},
+		{
+			name: "zero rate should not panic", args: args{
+				rate: decimal.Zero,
+				nper: 10,
+				pmt:  decimal.NewFromInt(-100),
+				fv:   decimal.Zero,
+				when: paymentperiod.ENDING,
+			},
+			want: decimal.NewFromInt(1000),
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -337,6 +357,30 @@ func Test_Nper(t *testing.T) {
 				when: paymentperiod.ENDING,
 			},
 			want:    decimal.NewFromFloat(64.0733487706618586),
+			wantErr: true,
+			err:     ErrOutOfBounds,
+		},
+		{
+			name: "zero rate should not panic", args: args{
+				rate: decimal.Zero,
+				fv:   decimal.NewFromInt(0),
+				pmt:  decimal.NewFromInt(-200),
+				pv:   decimal.NewFromInt(5000),
+				when: paymentperiod.ENDING,
+			},
+			want:    decimal.NewFromInt(25),
+			wantErr: false,
+			err:     nil,
+		},
+		{
+			name: "zero rate and zero pmt returns error", args: args{
+				rate: decimal.Zero,
+				fv:   decimal.NewFromInt(0),
+				pmt:  decimal.Zero,
+				pv:   decimal.NewFromInt(5000),
+				when: paymentperiod.ENDING,
+			},
+			want:    decimal.Zero,
 			wantErr: true,
 			err:     ErrOutOfBounds,
 		},
