@@ -413,6 +413,51 @@ func Test_Rate(t *testing.T) {
 			want:   decimal.Zero,
 			anyErr: ErrTolerence,
 		},
+		{
+			name: "unit cash flows scale invariance",
+			args: args{
+				pv:           decimal.NewFromInt(0),
+				fv:           decimal.RequireFromString("-2.05"),
+				pmt:          decimal.NewFromInt(1),
+				nper:         2,
+				when:         paymentperiod.ENDING,
+				maxIter:      100,
+				tolerance:    decimal.RequireFromString("0.0000001"),
+				initialGuess: decimal.RequireFromString("0.1"),
+			},
+			want:   decimal.RequireFromString("0.05"),
+			anyErr: nil,
+		},
+		{
+			name: "same flows scaled 100x",
+			args: args{
+				pv:           decimal.NewFromInt(0),
+				fv:           decimal.RequireFromString("-205"),
+				pmt:          decimal.NewFromInt(100),
+				nper:         2,
+				when:         paymentperiod.ENDING,
+				maxIter:      100,
+				tolerance:    decimal.RequireFromString("0.0000001"),
+				initialGuess: decimal.RequireFromString("0.1"),
+			},
+			want:   decimal.RequireFromString("0.05"),
+			anyErr: nil,
+		},
+		{
+			name: "small scale cash flows",
+			args: args{
+				pv:           decimal.RequireFromString("0.0000001"),
+				fv:           decimal.RequireFromString("0.000000005"),
+				pmt:          decimal.RequireFromString("-0.00000006"),
+				nper:         2,
+				when:         paymentperiod.ENDING,
+				maxIter:      100,
+				tolerance:    decimal.RequireFromString("0.0000001"),
+				initialGuess: decimal.RequireFromString("0.05"),
+			},
+			want:   decimal.RequireFromString("0.1"),
+			anyErr: nil,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

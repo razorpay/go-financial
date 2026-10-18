@@ -321,7 +321,7 @@ func getRateRatio(pv, fv, pmt, curRate decimal.Decimal, nper int64, when payment
 	derivativeP1 := pmt.Mul(whenInDecimal).Mul(f0.Sub(oneInDecimal)).Div(curRate)
 	derivativeP2s0 := oneInDecimal.Add(curRate.Mul(whenInDecimal))
 	derivativeP2s1 := ((curRate.Mul((nperInDecimal)).Mul(f1)).Sub(f0).Add(oneInDecimal)).Div(curRate.Mul(curRate))
-	derivativeP2 := derivativeP2s0.Mul(derivativeP2s1)
+	derivativeP2 := pmt.Mul(derivativeP2s0).Mul(derivativeP2s1)
 	derivative := derivativeP0.Add(derivativeP1).Add(derivativeP2)
 	// derivative := (float64(nper) * f1 * pv) + (pmt * ((when.Value() * (f0 - 1) / curRate) + ((1.0 + curRate*when.Value()) * ((curRate*float64(nper)*f1 - f0 + 1) / (curRate * curRate)))))
 
